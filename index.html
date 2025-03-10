@@ -28,6 +28,11 @@
         #copyBtn:hover {
             background-color: #45a049;
         }
+        #extensionDisplay {
+            margin-bottom: 20px;
+            font-size: 20px;
+            color: #333;
+        }
         #feedback {
             margin-top: 10px;
             font-size: 16px;
@@ -37,6 +42,7 @@
     </style>
 </head>
 <body>
+    <div id="extensionDisplay">Loading...</div>
     <button id="copyBtn">Copy Extension to Clipboard</button>
     <span id="feedback">Copied!</span>
 
@@ -46,33 +52,38 @@
 
             const copyBtn = document.getElementById("copyBtn");
             const feedback = document.getElementById("feedback");
+            const extensionDisplay = document.getElementById("extensionDisplay");
 
-            if (!copyBtn) {
-                console.error("Button not found!");
+            if (!copyBtn || !extensionDisplay) {
+                console.error("Required elements not found!");
                 return;
             }
 
-            // Explicitly define the extension
+            // Calculate the extension
             const extension = window.location.search 
                 ? decodeURIComponent(window.location.search.substring(1)) 
                 : "Home";
             console.log("Calculated extension:", extension);
 
-            // Ensure no interference by locking the value
+            // Display the extension on the page
+            extensionDisplay.textContent = extension;
+            console.log("Displayed extension:", extensionDisplay.textContent);
+
+            // Set the text to copy
             const textToCopy = extension;
-            console.log("Text to copy set as:", textToCopy);
+            console.log("Text to copy assigned:", textToCopy);
 
             copyBtn.addEventListener("click", function() {
-                console.log("Button clicked, attempting to copy:", textToCopy);
-                
+                console.log("Button clicked, copying:", textToCopy);
+
                 navigator.clipboard.writeText(textToCopy).then(() => {
-                    console.log("Successfully copied to clipboard:", textToCopy);
+                    console.log("Clipboard write successful, copied:", textToCopy);
                     feedback.style.display = "block";
                     setTimeout(() => {
                         feedback.style.display = "none";
                     }, 2000);
                 }).catch(err => {
-                    console.error("Clipboard copy failed:", err);
+                    console.error("Clipboard write failed:", err);
                     alert("Failed to copy: " + err.message);
                 });
             });
