@@ -16,9 +16,22 @@
             height: 100vh;
             flex-direction: column;
         }
+        .row-container {
+            display: flex;
+            align-items: center;
+            background-color: #fff;
+            padding: 10px 20px;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        #extensionDisplay {
+            font-size: 20px;
+            color: #333;
+            margin-right: 20px;
+        }
         #copyBtn {
-            padding: 15px 30px;
-            font-size: 18px;
+            padding: 10px 20px;
+            font-size: 16px;
             background-color: #4CAF50;
             color: white;
             border: none;
@@ -27,11 +40,6 @@
         }
         #copyBtn:hover {
             background-color: #45a049;
-        }
-        #extensionDisplay {
-            margin-bottom: 20px;
-            font-size: 20px;
-            color: #333;
         }
         #feedback {
             margin-top: 10px;
@@ -42,8 +50,10 @@
     </style>
 </head>
 <body>
-    <div id="extensionDisplay">Loading...</div>
-    <button id="copyBtn">Copy Extension to Clipboard</button>
+    <div class="row-container">
+        <span id="extensionDisplay">Loading...</span>
+        <button id="copyBtn">Copy</button>
+    </div>
     <span id="feedback">Copied!</span>
 
     <script>
@@ -51,8 +61,8 @@
             console.log("DOM loaded, initializing...");
 
             const copyBtn = document.getElementById("copyBtn");
-            const feedback = document.getElementById("feedback");
             const extensionDisplay = document.getElementById("extensionDisplay");
+            const feedback = document.getElementById("feedback");
 
             if (!copyBtn || !extensionDisplay) {
                 console.error("Required elements not found!");
@@ -65,7 +75,7 @@
                 : "Home";
             console.log("Calculated extension:", extension);
 
-            // Display the extension on the page
+            // Display the extension
             extensionDisplay.textContent = extension;
             console.log("Displayed extension:", extensionDisplay.textContent);
 
