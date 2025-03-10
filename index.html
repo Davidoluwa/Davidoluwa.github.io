@@ -16,22 +16,9 @@
             height: 100vh;
             flex-direction: column;
         }
-        .row-container {
-            display: flex;
-            align-items: center;
-            background-color: #fff;
-            padding: 10px 20px;
-            border-radius: 5px;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-        }
-        #extensionDisplay {
-            font-size: 20px;
-            color: #333;
-            margin-right: 20px;
-        }
         #copyBtn {
-            padding: 10px 20px;
-            font-size: 16px;
+            padding: 15px 30px;
+            font-size: 18px;
             background-color: #4CAF50;
             color: white;
             border: none;
@@ -50,54 +37,51 @@
     </style>
 </head>
 <body>
-    <div class="row-container">
-        <span id="extensionDisplay">Loading...</span>
-        <button id="copyBtn">Copy</button>
-    </div>
+    <button id="copyBtn">Copy Extension to Clipboard</button>
     <span id="feedback">Copied!</span>
 
     <script>
         document.addEventListener("DOMContentLoaded", function () {
-            console.log("DOM loaded, initializing...");
+            // Log to confirm script execution
+            console.log("DOM loaded, button should be visible");
 
+            // Get the button and feedback elements
             const copyBtn = document.getElementById("copyBtn");
-            const extensionDisplay = document.getElementById("extensionDisplay");
             const feedback = document.getElementById("feedback");
-
-            if (!copyBtn || !extensionDisplay) {
-                console.error("Required elements not found!");
+            if (!copyBtn) {
+                console.error("Button with ID 'copyBtn' not found!");
                 return;
             }
 
-            // Calculate the extension
-            const extension = window.location.search 
+            // Determine the URL extension
+            let extension = window.location.search 
                 ? decodeURIComponent(window.location.search.substring(1)) 
                 : "Home";
-            console.log("Calculated extension:", extension);
+            console.log("Extension detected:", extension);
 
-            // Display the extension
-            extensionDisplay.textContent = extension;
-            console.log("Displayed extension:", extensionDisplay.textContent);
-
-            // Set the text to copy
-            const textToCopy = extension;
-            console.log("Text to copy assigned:", textToCopy);
-
+            // Add click event listener to the button
             copyBtn.addEventListener("click", function() {
-                console.log("Button clicked, copying:", textToCopy);
-
-                navigator.clipboard.writeText(textToCopy).then(() => {
-                    console.log("Clipboard write successful, copied:", textToCopy);
-                    feedback.style.display = "block";
-                    setTimeout(() => {
-                        feedback.style.display = "none";
-                    }, 2000);
-                }).catch(err => {
-                    console.error("Clipboard write failed:", err);
-                    alert("Failed to copy: " + err.message);
-                });
+                try {
+                    // Use the modern Clipboard API to copy the extension
+                    navigator.clipboard.writeText(extension).then(() => {
+                        // Show feedback
+                        feedback.style.display = "block";
+                        console.log("Extension copied to clipboard:", extension);
+                        // Hide feedback after 2 seconds
+                        setTimeout(() => {
+                            feedback.style.display = "none";
+                        }, 2000);
+                    }).catch(err => {
+                        console.error("Failed to copy:", err);
+                        alert("Failed to copy to clipboard. Please try again.");
+                    });
+                } catch (error) {
+                    console.error("Error during copy operation:", error);
+                    alert("An error occurred while copying.");
+                }
             });
         });
     </script>
+</body>
 </body>
 </html>
