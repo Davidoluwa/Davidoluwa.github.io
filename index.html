@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Download URL Extension</title>
+    <title>Copy URL Extension</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -14,8 +14,9 @@
             justify-content: center;
             align-items: center;
             height: 100vh;
+            flex-direction: column;
         }
-        #downloadBtn {
+        #copyBtn {
             padding: 15px 30px;
             font-size: 18px;
             background-color: #4CAF50;
@@ -24,24 +25,31 @@
             cursor: pointer;
             border-radius: 5px;
         }
-        #downloadBtn:hover {
+        #copyBtn:hover {
             background-color: #45a049;
+        }
+        #feedback {
+            margin-top: 10px;
+            font-size: 16px;
+            color: #333;
+            display: none;
         }
     </style>
 </head>
 <body>
-    <button id="downloadBtn">Download Extension</button>
+    <button id="copyBtn">Copy Extension to Clipboard</button>
+    <span id="feedback">Copied!</span>
 
     <script>
-        // Ensure the script runs after the DOM is fully loaded
         document.addEventListener("DOMContentLoaded", function () {
-            // Log to confirm the script is running
+            // Log to confirm script execution
             console.log("DOM loaded, button should be visible");
 
-            // Get the button element
-            const downloadBtn = document.getElementById("downloadBtn");
-            if (!downloadBtn) {
-                console.error("Button with ID 'downloadBtn' not found!");
+            // Get the button and feedback elements
+            const copyBtn = document.getElementById("copyBtn");
+            const feedback = document.getElementById("feedback");
+            if (!copyBtn) {
+                console.error("Button with ID 'copyBtn' not found!");
                 return;
             }
 
@@ -52,27 +60,28 @@
             console.log("Extension detected:", extension);
 
             // Add click event listener to the button
-            downloadBtn.addEventListener("click", function() {
+            copyBtn.addEventListener("click", function() {
                 try {
-                    // Create a Blob with the extension text
-                    const blob = new Blob([extension], { type: "text/plain;charset=utf-8" });
-                    const url = URL.createObjectURL(blob);
-
-                    // Create a temporary anchor element for download
-                    const a = document.createElement("a");
-                    a.href = url;
-                    a.download = "extension.txt";
-                    document.body.appendChild(a);
-                    a.click();
-                    document.body.removeChild(a);
-                    URL.revokeObjectURL(url);
-
-                    console.log("Download triggered successfully");
+                    // Use the modern Clipboard API to copy the extension
+                    navigator.clipboard.writeText(extension).then(() => {
+                        // Show feedback
+                        feedback.style.display = "block";
+                        console.log("Extension copied to clipboard:", extension);
+                        // Hide feedback after 2 seconds
+                        setTimeout(() => {
+                            feedback.style.display = "none";
+                        }, 2000);
+                    }).catch(err => {
+                        console.error("Failed to copy:", err);
+                        alert("Failed to copy to clipboard. Please try again.");
+                    });
                 } catch (error) {
-                    console.error("Error during download:", error);
+                    console.error("Error during copy operation:", error);
+                    alert("An error occurred while copying.");
                 }
             });
         });
     </script>
+</body>
 </body>
 </html>
