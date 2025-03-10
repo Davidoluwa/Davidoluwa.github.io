@@ -55,14 +55,21 @@
         <p>&copy; 2024 Davidoluwa</p>
     </footer>
 
-    <script>
-    // Get the URL parameter (e.g., "?now" becomes "now")
-    let params = new URLSearchParams(window.location.search);
-    let extension = params.keys().next().value || "Home"; // Default to "Home" if empty
+    <p>Current URL Extension: <span id="extension"></span></p>
+
+<script>
+    // Get the pathname (e.g., "/now" → "now")
+    let extension = window.location.pathname.substring(1);
+
+    // If no extension is found, default to "Home"
+    if (!extension) {
+        extension = "Home";
+    }
 
     // Display the extension
-    document.getElementById('extension').textContent = extension;
+    document.getElementById("extension").textContent = extension;
 </script>
+
 
 </body>
 </html>
