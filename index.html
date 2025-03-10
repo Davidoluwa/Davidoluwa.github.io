@@ -58,17 +58,20 @@
     <p>Current URL Extension: <span id="extension"></span></p>
 
 <script>
-    // Get the pathname (e.g., "/now" → "now")
-    let extension = window.location.pathname.substring(1);
+    document.addEventListener("DOMContentLoaded", function () {
+        // Get the pathname (e.g., "/now" → "now")
+        let extension = window.location.pathname.replace(/^\/+|\/+$/g, ""); 
 
-    // If no extension is found, default to "Home"
-    if (!extension) {
-        extension = "Home";
-    }
+        // If no extension is found, default to "Home"
+        if (!extension) {
+            extension = "Home";
+        }
 
-    // Display the extension
-    document.getElementById("extension").textContent = extension;
+        // Display the extracted extension
+        document.getElementById("extension").textContent = extension;
+    });
 </script>
+
 
 
 </body>
