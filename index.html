@@ -22,6 +22,12 @@
             padding: 20px;
             max-width: 800px;
             margin: auto;
+            text-align: center;
+        }
+        #extension {
+            font-size: 20px;
+            font-weight: bold;
+            color: #4CAF50;
         }
         footer {
             background-color: #333;
@@ -41,9 +47,23 @@
     <main>
         <h2>About This Site</h2>
         <p>This is a simple static website hosted on GitHub Pages. You can customize it as you like.</p>
+
+        <h2>Current URL Extension:</h2>
+        <p id="extension">Loading...</p>
     </main>
     <footer>
         <p>&copy; 2024 Davidoluwa</p>
     </footer>
+
+    <script>
+        // Get the path after the domain (e.g., "/MyName" in "https://Davidoluwa.github.io/MyName")
+        let path = window.location.pathname;
+
+        // Remove the leading slash if present ("/MyName" -> "MyName")
+        path = path.replace(/^\/+/, '');
+
+        // Display the extension (default to "Home" if empty)
+        document.getElementById('extension').textContent = path ? path : "Home";
+    </script>
 </body>
 </html>
