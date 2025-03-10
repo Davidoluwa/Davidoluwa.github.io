@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Copy URL Extension</title>
+    <link rel="manifest" href="/manifest.json">
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -58,45 +59,29 @@
 
     <script>
         document.addEventListener("DOMContentLoaded", function () {
-            console.log("DOM loaded, initializing...");
-
             const copyBtn = document.getElementById("copyBtn");
             const extensionDisplay = document.getElementById("extensionDisplay");
             const feedback = document.getElementById("feedback");
 
-            if (!copyBtn || !extensionDisplay) {
-                console.error("Required elements not found!");
-                return;
-            }
-
-            // Calculate the extension
             const extension = window.location.search 
                 ? decodeURIComponent(window.location.search.substring(1)) 
                 : "Home";
-            console.log("Calculated extension:", extension);
-
-            // Display the extension
             extensionDisplay.textContent = extension;
-            console.log("Displayed extension:", extensionDisplay.textContent);
-
-            // Set the text to copy
             const textToCopy = extension;
-            console.log("Text to copy assigned:", textToCopy);
 
             copyBtn.addEventListener("click", function() {
-                console.log("Button clicked, copying:", textToCopy);
-
                 navigator.clipboard.writeText(textToCopy).then(() => {
-                    console.log("Clipboard write successful, copied:", textToCopy);
                     feedback.style.display = "block";
-                    setTimeout(() => {
-                        feedback.style.display = "none";
-                    }, 2000);
-                }).catch(err => {
-                    console.error("Clipboard write failed:", err);
-                    alert("Failed to copy: " + err.message);
-                });
+                    setTimeout(() => feedback.style.display = "none", 2000);
+                }).catch(err => alert("Failed to copy: " + err.message));
             });
+
+            // Register Service Worker
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(reg => console.log('Service Worker registered'))
+                    .catch(err => console.error('Service Worker failed:', err));
+            }
         });
     </script>
 </body>
