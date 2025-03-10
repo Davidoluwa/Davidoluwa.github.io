@@ -3,60 +3,38 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Davidoluwa's GitHub Pages Site</title>
+    <title>Download URL Extension</title>
     <style>
         body {
             font-family: Arial, sans-serif;
             margin: 0;
             padding: 0;
             background-color: #f4f4f4;
-            color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
         }
-        header {
+        #downloadBtn {
+            padding: 15px 30px;
+            font-size: 18px;
             background-color: #4CAF50;
             color: white;
-            padding: 20px;
-            text-align: center;
+            border: none;
+            cursor: pointer;
+            border-radius: 5px;
         }
-        main {
-            padding: 20px;
-            max-width: 800px;
-            margin: auto;
-            text-align: center;
-        }
-        #extension {
-            font-size: 20px;
-            font-weight: bold;
-            color: #4CAF50;
-        }
-        footer {
-            background-color: #333;
-            color: white;
-            text-align: center;
-            padding: 10px;
-            position: fixed;
-            bottom: 0;
-            width: 100%;
+        #downloadBtn:hover {
+            background-color: #45a049;
         }
     </style>
 </head>
 <body>
-    <header>
-        <h1 id="extension">Loading...</h1>
-    </header>
-    <main>
-        <h2>About This Site</h2>
-        <p>This is a simple static website hosted on GitHub Pages. You can customize it as you like.</p>
-
-        <h2>Current URL Extension:</h2>
-        <p id="extension"></p>
-    </main>
-    <footer>
-        <p>© 2024 Davidoluwa</p>
-    </footer>
+    <button id="downloadBtn">Download Extension</button>
 
     <script>
         document.addEventListener("DOMContentLoaded", function () {
+            // Determine the URL extension
             let extension;
             if (window.location.search) {
                 // Extract and decode the extension from the query string
@@ -64,8 +42,23 @@
             } else {
                 extension = "Home";
             }
-            // Update the element with the extension
-            document.getElementById("extension").textContent = extension;
+
+            // Add event listener to the download button
+            const downloadBtn = document.getElementById("downloadBtn");
+            downloadBtn.addEventListener("click", function() {
+                // Create a Blob with the extension text
+                const blob = new Blob([extension], { type: "text/plain;charset=utf-8" });
+                // Generate a temporary URL for the Blob
+                const url = URL.createObjectURL(blob);
+                // Create a temporary anchor element to trigger the download
+                const a = document.createElement("a");
+                a.href = url;
+                a.download = "extension.txt"; // Set the filename
+                document.body.appendChild(a); // Append to body for compatibility
+                a.click();
+                document.body.removeChild(a); // Clean up
+                URL.revokeObjectURL(url); // Free up resources
+            });
         });
     </script>
 </body>
