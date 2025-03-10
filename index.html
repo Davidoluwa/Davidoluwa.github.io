@@ -42,46 +42,41 @@
 
     <script>
         document.addEventListener("DOMContentLoaded", function () {
-            // Log to confirm script execution
-            console.log("DOM loaded, button should be visible");
+            console.log("DOM loaded, initializing...");
 
-            // Get the button and feedback elements
             const copyBtn = document.getElementById("copyBtn");
             const feedback = document.getElementById("feedback");
+
             if (!copyBtn) {
-                console.error("Button with ID 'copyBtn' not found!");
+                console.error("Button not found!");
                 return;
             }
 
-            // Determine the URL extension
-            let extension = window.location.search 
+            // Explicitly define the extension
+            const extension = window.location.search 
                 ? decodeURIComponent(window.location.search.substring(1)) 
                 : "Home";
-            console.log("Extension detected:", extension);
+            console.log("Calculated extension:", extension);
 
-            // Add click event listener to the button
+            // Ensure no interference by locking the value
+            const textToCopy = extension;
+            console.log("Text to copy set as:", textToCopy);
+
             copyBtn.addEventListener("click", function() {
-                try {
-                    // Use the modern Clipboard API to copy the extension
-                    navigator.clipboard.writeText(extension).then(() => {
-                        // Show feedback
-                        feedback.style.display = "block";
-                        console.log("Extension copied to clipboard:", extension);
-                        // Hide feedback after 2 seconds
-                        setTimeout(() => {
-                            feedback.style.display = "none";
-                        }, 2000);
-                    }).catch(err => {
-                        console.error("Failed to copy:", err);
-                        alert("Failed to copy to clipboard. Please try again.");
-                    });
-                } catch (error) {
-                    console.error("Error during copy operation:", error);
-                    alert("An error occurred while copying.");
-                }
+                console.log("Button clicked, attempting to copy:", textToCopy);
+                
+                navigator.clipboard.writeText(textToCopy).then(() => {
+                    console.log("Successfully copied to clipboard:", textToCopy);
+                    feedback.style.display = "block";
+                    setTimeout(() => {
+                        feedback.style.display = "none";
+                    }, 2000);
+                }).catch(err => {
+                    console.error("Clipboard copy failed:", err);
+                    alert("Failed to copy: " + err.message);
+                });
             });
         });
     </script>
-</body>
 </body>
 </html>
