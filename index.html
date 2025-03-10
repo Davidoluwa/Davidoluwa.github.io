@@ -56,14 +56,13 @@
     </footer>
 
     <script>
-        // Get the path after the domain (e.g., "/MyName" in "https://Davidoluwa.github.io/MyName")
-        let path = window.location.pathname;
+    // Get the URL parameter (e.g., "?now" becomes "now")
+    let params = new URLSearchParams(window.location.search);
+    let extension = params.keys().next().value || "Home"; // Default to "Home" if empty
 
-        // Remove the leading slash if present ("/MyName" -> "MyName")
-        path = path.replace(/^\/+/, '');
+    // Display the extension
+    document.getElementById('extension').textContent = extension;
+</script>
 
-        // Display the extension (default to "Home" if empty)
-        document.getElementById('extension').textContent = path ? path : "Home";
-    </script>
 </body>
 </html>
