@@ -16,7 +16,20 @@
             height: 100vh;
             flex-direction: column;
         }
+        #copyBtn {
+            padding: 15px 30px;
+            font-size: 18px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+        #copyBtn:hover {
+            background-color: #45a049;
+        }
         #feedback {
+            margin-top: 10px;
             font-size: 16px;
             color: #333;
             display: none;
@@ -24,32 +37,44 @@
     </style>
 </head>
 <body>
+    <button id="copyBtn">Copy Extension to Clipboard</button>
     <span id="feedback">Copied!</span>
 
     <script>
         document.addEventListener("DOMContentLoaded", function () {
             console.log("DOM loaded, initializing...");
 
+            const copyBtn = document.getElementById("copyBtn");
             const feedback = document.getElementById("feedback");
 
+            if (!copyBtn) {
+                console.error("Button not found!");
+                return;
+            }
+
+            // Explicitly define the extension
             const extension = window.location.search 
                 ? decodeURIComponent(window.location.search.substring(1)) 
                 : "Home";
             console.log("Calculated extension:", extension);
 
+            // Ensure no interference by locking the value
             const textToCopy = extension;
             console.log("Text to copy set as:", textToCopy);
 
-            console.log("Attempting to copy:", textToCopy);
-            navigator.clipboard.writeText(textToCopy).then(() => {
-                console.log("Successfully copied to clipboard:", textToCopy);
-                feedback.style.display = "block";
-                setTimeout(() => {
-                    feedback.style.display = "none";
-                }, 2000);
-            }).catch(err => {
-                console.error("Clipboard copy failed:", err);
-                alert("Failed to copy: " + err.message);
+            copyBtn.addEventListener("click", function() {
+                console.log("Button clicked, attempting to copy:", textToCopy);
+                
+                navigator.clipboard.writeText(textToCopy).then(() => {
+                    console.log("Successfully copied to clipboard:", textToCopy);
+                    feedback.style.display = "block";
+                    setTimeout(() => {
+                        feedback.style.display = "none";
+                    }, 2000);
+                }).catch(err => {
+                    console.error("Clipboard copy failed:", err);
+                    alert("Failed to copy: " + err.message);
+                });
             });
         });
     </script>
