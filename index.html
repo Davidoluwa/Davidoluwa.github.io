@@ -33,31 +33,44 @@
     <button id="downloadBtn">Download Extension</button>
 
     <script>
+        // Ensure the script runs after the DOM is fully loaded
         document.addEventListener("DOMContentLoaded", function () {
-            // Determine the URL extension
-            let extension;
-            if (window.location.search) {
-                // Extract and decode the extension from the query string
-                extension = decodeURIComponent(window.location.search.substring(1));
-            } else {
-                extension = "Home";
+            // Log to confirm the script is running
+            console.log("DOM loaded, button should be visible");
+
+            // Get the button element
+            const downloadBtn = document.getElementById("downloadBtn");
+            if (!downloadBtn) {
+                console.error("Button with ID 'downloadBtn' not found!");
+                return;
             }
 
-            // Add event listener to the download button
-            const downloadBtn = document.getElementById("downloadBtn");
+            // Determine the URL extension
+            let extension = window.location.search 
+                ? decodeURIComponent(window.location.search.substring(1)) 
+                : "Home";
+            console.log("Extension detected:", extension);
+
+            // Add click event listener to the button
             downloadBtn.addEventListener("click", function() {
-                // Create a Blob with the extension text
-                const blob = new Blob([extension], { type: "text/plain;charset=utf-8" });
-                // Generate a temporary URL for the Blob
-                const url = URL.createObjectURL(blob);
-                // Create a temporary anchor element to trigger the download
-                const a = document.createElement("a");
-                a.href = url;
-                a.download = "extension.txt"; // Set the filename
-                document.body.appendChild(a); // Append to body for compatibility
-                a.click();
-                document.body.removeChild(a); // Clean up
-                URL.revokeObjectURL(url); // Free up resources
+                try {
+                    // Create a Blob with the extension text
+                    const blob = new Blob([extension], { type: "text/plain;charset=utf-8" });
+                    const url = URL.createObjectURL(blob);
+
+                    // Create a temporary anchor element for download
+                    const a = document.createElement("a");
+                    a.href = url;
+                    a.download = "extension.txt";
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+
+                    console.log("Download triggered successfully");
+                } catch (error) {
+                    console.error("Error during download:", error);
+                }
             });
         });
     </script>
