@@ -55,18 +55,14 @@
         <p>© 2024 Davidoluwa</p>
     </footer>
 
-    <!-- Removed the duplicate <p> with id="extension" -->
-
     <script>
         document.addEventListener("DOMContentLoaded", function () {
             let extension;
-            // Check if there's a query string (e.g., "?now")
             if (window.location.search) {
-                // Extract the extension from the query string, removing the "?"
-                extension = window.location.search.substring(1);
+                // Extract and decode the extension from the query string
+                extension = decodeURIComponent(window.location.search.substring(1));
             } else {
-                // Fallback to pathname if no query string
-                extension = window.location.pathname.replace(/^\/+|\/+$/g, "") || "Home";
+                extension = "Home";
             }
             // Update the element with the extension
             document.getElementById("extension").textContent = extension;
