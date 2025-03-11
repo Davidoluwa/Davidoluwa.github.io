@@ -86,12 +86,12 @@
             // Check auth state on load
             auth.onAuthStateChanged(user => {
                 if (user) {
-                    // User is signed in, hide auth and show save section
+                    console.log("User signed in:", user.email, "UID:", user.uid);
                     authSection.style.display = "none";
                     saveSection.style.display = "flex";
                     userEmailSpan.textContent = `Logged in as: ${user.email}`;
                 } else {
-                    // No user signed in, show auth section
+                    console.log("No user signed in");
                     authSection.style.display = "flex";
                     saveSection.style.display = "none";
                 }
@@ -107,21 +107,23 @@
 
                 // Try signing in
                 auth.signInWithEmailAndPassword(email, password)
-                    .then(() => {
-                        console.log("Signed in as:", email);
+                    .then(userCredential => {
+                        console.log("Signed in successfully:", userCredential.user.email);
                     })
-                    .catch(err => {
-                        if (err.code === "auth/user-not-found" || err.code === "auth/wrong-password") {
-                            // If sign-in fails, try registering
+                    .catch(signInErr => {
+                        console.log("Sign-in failed:", signInErr.code, signInErr.message);
+                        if (signInErr.code === "auth/invalid-login-credentials" || signInErr.code === "auth/user-not-found") {
+                            // Try registering if sign-in fails due to no user
                             auth.createUserWithEmailAndPassword(email, password)
-                                .then(() => {
-                                    console.log("Registered and signed in as:", email);
+                                .then(userCredential => {
+                                    console.log("Registered and signed in:", userCredential.user.email);
                                 })
                                 .catch(regErr => {
+                                    console.error("Registration failed:", regErr.code, regErr.message);
                                     alert("Failed to register: " + regErr.message);
                                 });
                         } else {
-                            alert("Failed to sign in: " + err.message);
+                            alert("Failed to sign in: " + signInErr.message);
                         }
                     });
             });
@@ -134,7 +136,7 @@
                         timestamp: firebase.firestore.FieldValue.serverTimestamp()
                     })
                     .then(() => {
-                        console.log("Saved for user:", user.email);
+                        console.log("Saved for user:", user.email, "UID:", user.uid);
                         feedback.style.display = "block";
                         setTimeout(() => feedback.style.display = "none", 2000);
                     })
