@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Save User</title>
+    <title>Save User - Thinkmate</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -32,13 +32,21 @@
             flex-direction: column;
             align-items: center;
         }
+        a {
+            color: #007bff;
+            text-decoration: none;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
     </style>
 </head>
 <body>
     <div id="authSection">
         <input type="email" id="email" placeholder="Enter your email">
         <input type="password" id="password" placeholder="Enter your password">
-        <button id="authBtn">Login or Register</button>
+        <button id="authBtn">Login</button>
+        <p>New user? <a href="https://Davidoluwa.github.io/register.html">Register here</a></p>
     </div>
     <div id="saveSection" style="display: none;">
         <span id="userEmail"></span>
@@ -63,7 +71,7 @@
             measurementId: "G-TPD462ZGCB"
         };
 
-        // Initialize Firebase (v8 style)
+        // Initialize Firebase
         firebase.initializeApp(firebaseConfig);
         console.log("Firebase initialized");
         const auth = firebase.auth();
@@ -108,27 +116,13 @@
                 }
                 console.log("Attempting login with:", email);
 
-                // Try signing in
                 auth.signInWithEmailAndPassword(email, password)
                     .then(userCredential => {
                         console.log("Signed in successfully:", userCredential.user.email, "UID:", userCredential.user.uid);
                     })
                     .catch(signInErr => {
                         console.log("Sign-in error:", signInErr.code, signInErr.message);
-                        if (signInErr.code === "auth/invalid-login-credentials" || signInErr.code === "auth/user-not-found") {
-                            console.log("User not found, attempting registration with:", email);
-                            // Try registering
-                            auth.createUserWithEmailAndPassword(email, password)
-                                .then(userCredential => {
-                                    console.log("Registered and signed in:", userCredential.user.email, "UID:", userCredential.user.uid);
-                                })
-                                .catch(regErr => {
-                                    console.error("Registration error:", regErr.code, regErr.message);
-                                    alert("Failed to register: " + regErr.message);
-                                });
-                        } else {
-                            alert("Failed to sign in: " + signInErr.message);
-                        }
+                        alert("Failed to sign in: " + signInErr.message);
                     });
             });
 
