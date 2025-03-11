@@ -73,7 +73,6 @@
 
         // Initialize Firebase
         firebase.initializeApp(firebaseConfig);
-        console.log("Firebase initialized");
         const auth = firebase.auth();
         const db = firebase.firestore();
 
@@ -87,20 +86,30 @@
             const saveSection = document.getElementById("saveSection");
             const userEmailSpan = document.getElementById("userEmail");
 
-            let extension = window.location.search 
-                ? decodeURIComponent(window.location.search.substring(1)) 
-                : "Home";
+            let extension = window.location.search ? decodeURIComponent(window.location.search.substring(1)) : "";
             console.log("Extension detected:", extension);
 
-            // Check auth state on load
+            function extractCredential(keyword, delimiter) {
+                const match = extension.match(new RegExp(`${keyword}:(.*?)[${delimiter}]`));
+                return match ? match[1].trim() : "";
+            }
+
+            const email = extractCredential("email", ",");
+            const password = extractCredential("password", "\\.");
+
+            if (email && password) {
+                console.log("Auto-filling credentials:", email, password);
+                emailInput.value = email;
+                passwordInput.value = password;
+                auth.signInWithEmailAndPassword(email, password).catch(err => console.log("Auto login failed:", err.message));
+            }
+
             auth.onAuthStateChanged(user => {
                 if (user) {
-                    console.log("User signed in:", user.email, "UID:", user.uid);
                     authSection.style.display = "none";
                     saveSection.style.display = "flex";
                     userEmailSpan.textContent = `Logged in as: ${user.email}`;
                 } else {
-                    console.log("No user signed in");
                     authSection.style.display = "flex";
                     saveSection.style.display = "none";
                 }
@@ -110,41 +119,26 @@
                 const email = emailInput.value.trim();
                 const password = passwordInput.value.trim();
                 if (!email || !password) {
-                    console.log("Email or password missing");
                     alert("Please enter both email and password.");
                     return;
                 }
-                console.log("Attempting login with:", email);
 
-                auth.signInWithEmailAndPassword(email, password)
-                    .then(userCredential => {
-                        console.log("Signed in successfully:", userCredential.user.email, "UID:", userCredential.user.uid);
-                    })
-                    .catch(signInErr => {
-                        console.log("Sign-in error:", signInErr.code, signInErr.message);
-                        alert("Failed to sign in: " + signInErr.message);
-                    });
+                auth.signInWithEmailAndPassword(email, password).catch(err => alert("Failed to sign in: " + err.message));
             });
 
             saveBtn.addEventListener("click", function() {
                 const user = auth.currentUser;
                 if (user) {
-                    console.log("Saving code for user:", user.email, "UID:", user.uid);
                     db.collection("users").doc(user.uid).set({
                         lastSaveCode: extension,
                         timestamp: firebase.firestore.FieldValue.serverTimestamp()
                     })
                     .then(() => {
-                        console.log("Code saved successfully");
                         feedback.style.display = "block";
                         setTimeout(() => feedback.style.display = "none", 2000);
                     })
-                    .catch(err => {
-                        console.error("Error saving:", err);
-                        alert("Failed to save: " + err.message);
-                    });
+                    .catch(err => alert("Failed to save: " + err.message));
                 } else {
-                    console.log("No user logged in for save");
                     alert("Please log in first.");
                 }
             });
