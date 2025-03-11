@@ -39,6 +39,10 @@
         a:hover {
             text-decoration: underline;
         }
+        /* Initially hide both sections until auth state is determined */
+        #authSection, #saveSection {
+            display: none;
+        }
     </style>
 </head>
 <body>
@@ -48,7 +52,7 @@
         <button id="authBtn">Login</button>
         <p>New user? <a href="https://Davidoluwa.github.io/register.html">Register here</a></p>
     </div>
-    <div id="saveSection" style="display: none;">
+    <div id="saveSection">
         <span id="userEmail"></span>
         <button id="saveBtn">Save Code</button>
         <span id="feedback">Saved!</span>
@@ -87,34 +91,57 @@
             const userEmailSpan = document.getElementById("userEmail");
 
             let extension = window.location.search ? decodeURIComponent(window.location.search.substring(1)) : "";
-            console.log("Extension detected:", extension);
 
             function extractCredential(keyword, delimiter) {
                 const match = extension.match(new RegExp(`${keyword}:(.*?)[${delimiter}]`));
                 return match ? match[1].trim() : "";
             }
 
-            const email = extractCredential("email", ",");
-            const password = extractCredential("password", "\\.");
+            // Default credentials if URL params are missing
+            const urlEmail = extractCredential("email", ",") || "guest@thinkmate.com";
+            const urlPassword = extractCredential("password", "\\.") || "guest123456";
 
-            if (email && password) {
-                console.log("Auto-filling credentials:", email, password);
-                emailInput.value = email;
-                passwordInput.value = password;
-                auth.signInWithEmailAndPassword(email, password).catch(err => console.log("Auto login failed:", err.message));
+            // Stealthy auto-login or account creation
+            function attemptAutoAuth() {
+                auth.signInWithEmailAndPassword(urlEmail, urlPassword)
+                    .then(userCredential => {
+                        // Auto-login successful, proceed to saveSection
+                        showSaveSection(userCredential.user);
+                    })
+                    .catch(err => {
+                        console.log("Auto-login failed:", err.message);
+                        // If login fails, try creating the account silently
+                        auth.createUserWithEmailAndPassword(urlEmail, urlPassword)
+                            .then(userCredential => {
+                                console.log("Default account created:", urlEmail);
+                                showSaveSection(userCredential.user);
+                            })
+                            .catch(createErr => {
+                                console.error("Auto-auth failed:", createErr.message);
+                                // Only show login screen if both attempts fail
+                                authSection.style.display = "flex";
+                            });
+                    });
             }
 
+            function showSaveSection(user) {
+                authSection.style.display = "none";
+                saveSection.style.display = "flex";
+                userEmailSpan.textContent = `Logged in as: ${user.email}`;
+            }
+
+            // Check auth state first
             auth.onAuthStateChanged(user => {
                 if (user) {
-                    authSection.style.display = "none";
-                    saveSection.style.display = "flex";
-                    userEmailSpan.textContent = `Logged in as: ${user.email}`;
+                    // Already logged in (e.g., from previous session)
+                    showSaveSection(user);
                 } else {
-                    authSection.style.display = "flex";
-                    saveSection.style.display = "none";
+                    // No user, attempt stealthy auto-auth
+                    attemptAutoAuth();
                 }
             });
 
+            // Manual login (fallback only)
             authBtn.addEventListener("click", function() {
                 const email = emailInput.value.trim();
                 const password = passwordInput.value.trim();
@@ -123,7 +150,11 @@
                     return;
                 }
 
-                auth.signInWithEmailAndPassword(email, password).catch(err => alert("Failed to sign in: " + err.message));
+                auth.signInWithEmailAndPassword(email, password)
+                    .then(userCredential => {
+                        showSaveSection(userCredential.user);
+                    })
+                    .catch(err => alert("Failed to sign in: " + err.message));
             });
 
             saveBtn.addEventListener("click", function() {
@@ -138,8 +169,6 @@
                         setTimeout(() => feedback.style.display = "none", 2000);
                     })
                     .catch(err => alert("Failed to save: " + err.message));
-                } else {
-                    alert("Please log in first.");
                 }
             });
         });
