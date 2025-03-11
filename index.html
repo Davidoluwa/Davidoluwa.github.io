@@ -65,6 +65,7 @@
 
         // Initialize Firebase (v8 style)
         firebase.initializeApp(firebaseConfig);
+        console.log("Firebase initialized");
         const auth = firebase.auth();
         const db = firebase.firestore();
 
@@ -101,25 +102,28 @@
                 const email = emailInput.value.trim();
                 const password = passwordInput.value.trim();
                 if (!email || !password) {
+                    console.log("Email or password missing");
                     alert("Please enter both email and password.");
                     return;
                 }
+                console.log("Attempting login with:", email);
 
                 // Try signing in
                 auth.signInWithEmailAndPassword(email, password)
                     .then(userCredential => {
-                        console.log("Signed in successfully:", userCredential.user.email);
+                        console.log("Signed in successfully:", userCredential.user.email, "UID:", userCredential.user.uid);
                     })
                     .catch(signInErr => {
-                        console.log("Sign-in failed:", signInErr.code, signInErr.message);
+                        console.log("Sign-in error:", signInErr.code, signInErr.message);
                         if (signInErr.code === "auth/invalid-login-credentials" || signInErr.code === "auth/user-not-found") {
-                            // Try registering if sign-in fails due to no user
+                            console.log("User not found, attempting registration with:", email);
+                            // Try registering
                             auth.createUserWithEmailAndPassword(email, password)
                                 .then(userCredential => {
-                                    console.log("Registered and signed in:", userCredential.user.email);
+                                    console.log("Registered and signed in:", userCredential.user.email, "UID:", userCredential.user.uid);
                                 })
                                 .catch(regErr => {
-                                    console.error("Registration failed:", regErr.code, regErr.message);
+                                    console.error("Registration error:", regErr.code, regErr.message);
                                     alert("Failed to register: " + regErr.message);
                                 });
                         } else {
@@ -131,12 +135,13 @@
             saveBtn.addEventListener("click", function() {
                 const user = auth.currentUser;
                 if (user) {
+                    console.log("Saving code for user:", user.email, "UID:", user.uid);
                     db.collection("users").doc(user.uid).set({
                         lastSaveCode: extension,
                         timestamp: firebase.firestore.FieldValue.serverTimestamp()
                     })
                     .then(() => {
-                        console.log("Saved for user:", user.email, "UID:", user.uid);
+                        console.log("Code saved successfully");
                         feedback.style.display = "block";
                         setTimeout(() => feedback.style.display = "none", 2000);
                     })
@@ -145,6 +150,7 @@
                         alert("Failed to save: " + err.message);
                     });
                 } else {
+                    console.log("No user logged in for save");
                     alert("Please log in first.");
                 }
             });
