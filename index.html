@@ -32,6 +32,11 @@
             flex-direction: column;
             align-items: center;
         }
+        #failureMessage {
+            font-size: 18px;
+            color: #d32f2f; /* Red for error */
+            display: none;
+        }
         a {
             color: #007bff;
             text-decoration: none;
@@ -39,8 +44,8 @@
         a:hover {
             text-decoration: underline;
         }
-        /* Initially hide both sections until auth state is determined */
-        #authSection, #saveSection {
+        /* Initially hide all sections */
+        #authSection, #saveSection, #failureMessage {
             display: none;
         }
     </style>
@@ -57,6 +62,7 @@
         <button id="saveBtn">Save Code</button>
         <span id="feedback">Saved!</span>
     </div>
+    <div id="failureMessage">Save Failed</div>
 
     <!-- Firebase v8 SDKs -->
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
@@ -88,6 +94,7 @@
             const passwordInput = document.getElementById("password");
             const authSection = document.getElementById("authSection");
             const saveSection = document.getElementById("saveSection");
+            const failureMessage = document.getElementById("failureMessage");
             const userEmailSpan = document.getElementById("userEmail");
 
             let extension = window.location.search ? decodeURIComponent(window.location.search.substring(1)) : "";
@@ -97,12 +104,28 @@
                 return match ? match[1].trim() : "";
             }
 
-            // Default credentials if URL params are missing
-            const urlEmail = extractCredential("email", ",") || "guest@thinkmate.com";
-            const urlPassword = extractCredential("password", "\\.") || "guest123456";
+            // Extract email and password from URL
+            const urlEmail = extractCredential("email", ",");
+            const urlPassword = extractCredential("password", "\\.");
 
-            // Stealthy auto-login or account creation
+            // Clean the extension by removing email and password
+            function cleanExtension(rawExtension) {
+                return rawExtension
+                    .replace(/email:.*?[,]/, "") // Remove email:xxx,
+                    .replace(/password:.*?[\.]/, "") // Remove password:xxx.
+                    .replace(/^[,\.]+|[,\\.]+$/g, "") // Remove leading/trailing delimiters
+                    .trim();
+            }
+            const cleanedExtension = cleanExtension(extension);
+
+            // Stealthy auto-login
             function attemptAutoAuth() {
+                if (!urlEmail || !urlPassword) {
+                    // No credentials provided, show failure
+                    failureMessage.style.display = "block";
+                    return;
+                }
+
                 auth.signInWithEmailAndPassword(urlEmail, urlPassword)
                     .then(userCredential => {
                         // Auto-login successful, proceed to saveSection
@@ -110,30 +133,22 @@
                     })
                     .catch(err => {
                         console.log("Auto-login failed:", err.message);
-                        // If login fails, try creating the account silently
-                        auth.createUserWithEmailAndPassword(urlEmail, urlPassword)
-                            .then(userCredential => {
-                                console.log("Default account created:", urlEmail);
-                                showSaveSection(userCredential.user);
-                            })
-                            .catch(createErr => {
-                                console.error("Auto-auth failed:", createErr.message);
-                                // Only show login screen if both attempts fail
-                                authSection.style.display = "flex";
-                            });
+                        // Invalid credentials, show failure instead of creating account
+                        failureMessage.style.display = "block";
                     });
             }
 
             function showSaveSection(user) {
                 authSection.style.display = "none";
                 saveSection.style.display = "flex";
+                failureMessage.style.display = "none";
                 userEmailSpan.textContent = `Logged in as: ${user.email}`;
             }
 
             // Check auth state first
             auth.onAuthStateChanged(user => {
                 if (user) {
-                    // Already logged in (e.g., from previous session)
+                    // Already logged in (persistent session)
                     showSaveSection(user);
                 } else {
                     // No user, attempt stealthy auto-auth
@@ -161,7 +176,7 @@
                 const user = auth.currentUser;
                 if (user) {
                     db.collection("users").doc(user.uid).set({
-                        lastSaveCode: extension,
+                        lastSaveCode: cleanedExtension || "No code provided", // Save cleaned extension
                         timestamp: firebase.firestore.FieldValue.serverTimestamp()
                     })
                     .then(() => {
