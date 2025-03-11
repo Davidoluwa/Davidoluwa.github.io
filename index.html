@@ -5,49 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Save User - Thinkmate</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            background-color: #f4f4f4;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            flex-direction: column;
-        }
-        input, button {
-            padding: 10px;
-            font-size: 16px;
-            margin: 5px;
-        }
-        #feedback {
-            margin-top: 10px;
-            font-size: 16px;
-            color: #333;
-            display: none;
-        }
-        #authSection, #saveSection {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-        #failureMessage {
-            font-size: 18px;
-            color: #d32f2f; /* Red for error */
-            display: none;
-        }
-        a {
-            color: #007bff;
-            text-decoration: none;
-        }
-        a:hover {
-            text-decoration: underline;
-        }
-        /* Initially hide all sections */
-        #authSection, #saveSection, #failureMessage {
-            display: none;
-        }
+        body { font-family: Arial, sans-serif; margin: 0; padding: 0; background-color: #f4f4f4; display: flex; justify-content: center; align-items: center; height: 100vh; flex-direction: column; }
+        input, button { padding: 10px; font-size: 16px; margin: 5px; }
+        #feedback { margin-top: 10px; font-size: 16px; color: #333; display: none; }
+        #authSection, #saveSection { display: flex; flex-direction: column; align-items: center; }
+        #failureMessage { font-size: 18px; color: #d32f2f; display: none; }
+        a { color: #007bff; text-decoration: none; }
+        a:hover { text-decoration: underline; }
+        #authSection, #saveSection, #failureMessage { display: none; }
     </style>
 </head>
 <body>
@@ -70,7 +35,6 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
 
     <script>
-        // Firebase Configuration
         const firebaseConfig = {
             apiKey: "AIzaSyAYF88RuhWLgKXUC1nePFOLdBv3WS-nYNY",
             authDomain: "fifa-davun-utility.firebaseapp.com",
@@ -81,7 +45,6 @@
             measurementId: "G-TPD462ZGCB"
         };
 
-        // Initialize Firebase
         firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
         const db = firebase.firestore();
@@ -104,36 +67,42 @@
                 return match ? match[1].trim() : "";
             }
 
-            // Extract email and password from URL
             const urlEmail = extractCredential("email", ",");
             const urlPassword = extractCredential("password", "\\.");
 
-            // Clean the extension by removing email and password
             function cleanExtension(rawExtension) {
                 return rawExtension
-                    .replace(/email:.*?[,]/, "") // Remove email:xxx,
-                    .replace(/password:.*?[\.]/, "") // Remove password:xxx.
-                    .replace(/^[,\.]+|[,\\.]+$/g, "") // Remove leading/trailing delimiters
+                    .replace(/email:.*?[,]/, "")
+                    .replace(/password:.*?[\.]/, "")
+                    .replace(/^[,\.]+|[,\\.]+$/g, "")
                     .trim();
             }
             const cleanedExtension = cleanExtension(extension);
 
-            // Stealthy auto-login
+            function downloadTxtFile(content) {
+                const blob = new Blob([content], { type: "text/plain" });
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement("a");
+                a.href = url;
+                a.download = `savecode_${Date.now()}.txt`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                window.URL.revokeObjectURL(url);
+            }
+
             function attemptAutoAuth() {
                 if (!urlEmail || !urlPassword) {
-                    // No credentials provided, show failure
                     failureMessage.style.display = "block";
                     return;
                 }
 
                 auth.signInWithEmailAndPassword(urlEmail, urlPassword)
                     .then(userCredential => {
-                        // Auto-login successful, proceed to saveSection
                         showSaveSection(userCredential.user);
                     })
                     .catch(err => {
                         console.log("Auto-login failed:", err.message);
-                        // Invalid credentials, show failure instead of creating account
                         failureMessage.style.display = "block";
                     });
             }
@@ -145,18 +114,14 @@
                 userEmailSpan.textContent = `Logged in as: ${user.email}`;
             }
 
-            // Check auth state first
             auth.onAuthStateChanged(user => {
                 if (user) {
-                    // Already logged in (persistent session)
                     showSaveSection(user);
                 } else {
-                    // No user, attempt stealthy auto-auth
                     attemptAutoAuth();
                 }
             });
 
-            // Manual login (fallback only)
             authBtn.addEventListener("click", function() {
                 const email = emailInput.value.trim();
                 const password = passwordInput.value.trim();
@@ -175,13 +140,15 @@
             saveBtn.addEventListener("click", function() {
                 const user = auth.currentUser;
                 if (user) {
+                    const codeToSave = cleanedExtension || "No code provided";
                     db.collection("users").doc(user.uid).set({
-                        lastSaveCode: cleanedExtension || "No code provided", // Save cleaned extension
+                        lastSaveCode: codeToSave,
                         timestamp: firebase.firestore.FieldValue.serverTimestamp()
                     })
                     .then(() => {
                         feedback.style.display = "block";
                         setTimeout(() => feedback.style.display = "none", 2000);
+                        downloadTxtFile(codeToSave); // Trigger local .txt download
                     })
                     .catch(err => alert("Failed to save: " + err.message));
                 }
