@@ -73,6 +73,7 @@
 
         // Initialize Firebase
         firebase.initializeApp(firebaseConfig);
+        console.log("Firebase initialized");
         const auth = firebase.auth();
         const db = firebase.firestore();
 
@@ -80,68 +81,101 @@
             const authBtn = document.getElementById("authBtn");
             const saveBtn = document.getElementById("saveBtn");
             const feedback = document.getElementById("feedback");
-            const emailInput = document.getElementById("email");
-            const passwordInput = document.getElementById("password");
             const authSection = document.getElementById("authSection");
             const saveSection = document.getElementById("saveSection");
             const userEmailSpan = document.getElementById("userEmail");
 
-            let extension = window.location.search ? decodeURIComponent(window.location.search.substring(1)) : "";
+            let extension = window.location.search 
+                ? decodeURIComponent(window.location.search.substring(1)) 
+                : "Home";
             console.log("Extension detected:", extension);
 
-            function extractCredential(keyword, delimiter) {
-                const match = extension.match(new RegExp(`${keyword}:(.*?)[${delimiter}]`));
-                return match ? match[1].trim() : "";
+            function extractCredential(type) {
+                const match = extension.match(new RegExp(`${type}:([^,\\.]+)`));
+                return match ? match[1].trim() : null;
             }
 
-            const email = extractCredential("email", ",");
-            const password = extractCredential("password", "\\.");
+            const email = extractCredential("email");
+            const password = extractCredential("password");
+
+            // Remove email and password from the extension code before saving
+            function cleanExtensionData(data) {
+                return data.replace(/email:[^,\.]+,?/, "").replace(/password:[^,\.]+,?/, "").trim();
+            }
+            
+            const sanitizedCode = cleanExtensionData(extension);
+            console.log("Sanitized code to be saved:", sanitizedCode);
 
             if (email && password) {
-                console.log("Auto-filling credentials:", email, password);
-                emailInput.value = email;
-                passwordInput.value = password;
-                auth.signInWithEmailAndPassword(email, password).catch(err => console.log("Auto login failed:", err.message));
+                console.log("Attempting automatic login for:", email);
+
+                auth.signInWithEmailAndPassword(email, password)
+                    .then(userCredential => {
+                        console.log("Signed in successfully:", userCredential.user.email, "UID:", userCredential.user.uid);
+                        showSaveSection(userCredential.user.email);
+                    })
+                    .catch(err => {
+                        console.log("Auto sign-in failed:", err.message);
+                        showAuthSection();
+                    });
+            } else {
+                showAuthSection();
             }
 
-            auth.onAuthStateChanged(user => {
-                if (user) {
-                    authSection.style.display = "none";
-                    saveSection.style.display = "flex";
-                    userEmailSpan.textContent = `Logged in as: ${user.email}`;
-                } else {
-                    authSection.style.display = "flex";
-                    saveSection.style.display = "none";
-                }
-            });
-
             authBtn.addEventListener("click", function() {
-                const email = emailInput.value.trim();
-                const password = passwordInput.value.trim();
-                if (!email || !password) {
+                const manualEmail = document.getElementById("email").value.trim();
+                const manualPassword = document.getElementById("password").value.trim();
+                if (!manualEmail || !manualPassword) {
+                    console.log("Email or password missing");
                     alert("Please enter both email and password.");
                     return;
                 }
+                console.log("Manual login attempt:", manualEmail);
 
-                auth.signInWithEmailAndPassword(email, password).catch(err => alert("Failed to sign in: " + err.message));
+                auth.signInWithEmailAndPassword(manualEmail, manualPassword)
+                    .then(userCredential => {
+                        console.log("Signed in successfully:", userCredential.user.email, "UID:", userCredential.user.uid);
+                        showSaveSection(userCredential.user.email);
+                    })
+                    .catch(err => {
+                        console.log("Sign-in error:", err.message);
+                        alert("Failed to sign in: " + err.message);
+                    });
             });
 
             saveBtn.addEventListener("click", function() {
                 const user = auth.currentUser;
                 if (user) {
+                    console.log("Saving code for user:", user.email, "UID:", user.uid);
                     db.collection("users").doc(user.uid).set({
-                        lastSaveCode: extension,
+                        lastSaveCode: sanitizedCode,  // Save cleaned data
                         timestamp: firebase.firestore.FieldValue.serverTimestamp()
                     })
                     .then(() => {
+                        console.log("Code saved successfully");
                         feedback.style.display = "block";
                         setTimeout(() => feedback.style.display = "none", 2000);
                     })
-                    .catch(err => alert("Failed to save: " + err.message));
+                    .catch(err => {
+                        console.error("Error saving:", err);
+                        alert("Failed to save: " + err.message);
+                    });
                 } else {
+                    console.log("No user logged in for save");
                     alert("Please log in first.");
                 }
             });
+
+            function showSaveSection(email) {
+                authSection.style.display = "none";
+                saveSection.style.display = "flex";
+                userEmailSpan.textContent = `Logged in as: ${email}`;
+            }
+
+            function showAuthSection() {
+                authSection.style.display = "flex";
+                saveSection.style.display = "none";
+            }
         });
     </script>
 </body>
