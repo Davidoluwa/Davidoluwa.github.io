@@ -34,20 +34,23 @@
     <button id="saveBtn">Save Code</button>
     <span id="feedback">Saved!</span>
 
-    <!-- Firebase SDK -->
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js"></script>
+    <!-- ✅ Use Firebase v8 instead of v9 -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+
     <script>
+        // ✅ Firebase Configuration
         const firebaseConfig = {
             apiKey: "AIzaSyAYF88RuhWLgKXUC1nePFOLdBv3WS-nYNY",
             authDomain: "fifa-davun-utility.firebaseapp.com",
             projectId: "fifa-davun-utility",
-            storageBucket: "fifa-davun-utility.firebasestorage.app",
+            storageBucket: "fifa-davun-utility.firebaseapp.com",
             messagingSenderId: "285918417550",
             appId: "1:285918417550:web:005acea2b83881d8cc2fdf",
             measurementId: "G-TPD462ZGCB"
         };
 
+        // ✅ Initialize Firebase (Firebase v8 style)
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
 
@@ -68,6 +71,7 @@
                     return;
                 }
 
+                // ✅ Firebase Firestore Write (Correct for v8)
                 db.collection("users").doc(userId).set({
                     lastSaveCode: extension,
                     timestamp: firebase.firestore.FieldValue.serverTimestamp()
