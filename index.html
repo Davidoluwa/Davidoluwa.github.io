@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FIFA Save Code Utility</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            flex-direction: column;
+        }
+        input, button {
+            padding: 10px;
+            font-size: 16px;
+            margin: 5px;
+        }
+        #feedback {
+            margin-top: 10px;
+            font-size: 16px;
+            color: #333;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <input type="text" id="userId" placeholder="Enter your username">
+    <button id="saveBtn">Save Code</button>
+    <span id="feedback">Saved!</span>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js"></script>
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyAYF88RuhWLgKXUC1nePFOLdBv3WS-nYNY",
+            authDomain: "fifa-davun-utility.firebaseapp.com",
+            projectId: "fifa-davun-utility",
+            storageBucket: "fifa-davun-utility.firebasestorage.app",
+            messagingSenderId: "285918417550",
+            appId: "1:285918417550:web:005acea2b83881d8cc2fdf",
+            measurementId: "G-TPD462ZGCB"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        document.addEventListener("DOMContentLoaded", function() {
+            const saveBtn = document.getElementById("saveBtn");
+            const feedback = document.getElementById("feedback");
+            const userIdInput = document.getElementById("userId");
+
+            let extension = window.location.search 
+                ? decodeURIComponent(window.location.search.substring(1)) 
+                : "Home";
+            console.log("Extension detected:", extension);
+
+            saveBtn.addEventListener("click", function() {
+                const userId = userIdInput.value.trim();
+                if (!userId) {
+                    alert("Please enter a username.");
+                    return;
+                }
+
+                db.collection("users").doc(userId).set({
+                    lastSaveCode: extension,
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                })
+                .then(() => {
+                    console.log("Saved for user:", userId);
+                    feedback.style.display = "block";
+                    setTimeout(() => feedback.style.display = "none", 2000);
+                })
+                .catch(err => {
+                    console.error("Error saving:", err);
+                    alert("Failed to save: " + err.message);
+                });
+            });
+        });
+    </script>
+</body>
+</html>
