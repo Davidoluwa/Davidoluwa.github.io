@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Copy URL Extension</title>
+    <title>FIFA Save Code Utility</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -16,17 +16,10 @@
             height: 100vh;
             flex-direction: column;
         }
-        #copyBtn {
-            padding: 15px 30px;
-            font-size: 18px;
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            cursor: pointer;
-            border-radius: 5px;
-        }
-        #copyBtn:hover {
-            background-color: #45a049;
+        input, button {
+            padding: 10px;
+            font-size: 16px;
+            margin: 5px;
         }
         #feedback {
             margin-top: 10px;
@@ -37,51 +30,63 @@
     </style>
 </head>
 <body>
-    <button id="copyBtn">Copy Extension to Clipboard</button>
-    <span id="feedback">Copied!</span>
+    <input type="text" id="userId" placeholder="Enter your username">
+    <button id="saveBtn">Save Code</button>
+    <span id="feedback">Saved!</span>
 
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js"></script>
     <script>
-        document.addEventListener("DOMContentLoaded", function () {
-            // Log to confirm script execution
-            console.log("DOM loaded, button should be visible");
+        // Your Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyAYF88RuhWLgKXUC1nePFOLdBv3WS-nYNY",
+            authDomain: "fifa-davun-utility.firebaseapp.com",
+            projectId: "fifa-davun-utility",
+            storageBucket: "fifa-davun-utility.firebasestorage.app",
+            messagingSenderId: "285918417550",
+            appId: "1:285918417550:web:005acea2b83881d8cc2fdf",
+            measurementId: "G-TPD462ZGCB"
+        };
 
-            // Get the button and feedback elements
-            const copyBtn = document.getElementById("copyBtn");
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        document.addEventListener("DOMContentLoaded", function() {
+            const saveBtn = document.getElementById("saveBtn");
             const feedback = document.getElementById("feedback");
-            if (!copyBtn) {
-                console.error("Button with ID 'copyBtn' not found!");
-                return;
-            }
+            const userIdInput = document.getElementById("userId");
 
-            // Determine the URL extension
+            // Get the URL extension
             let extension = window.location.search 
                 ? decodeURIComponent(window.location.search.substring(1)) 
                 : "Home";
             console.log("Extension detected:", extension);
 
-            // Add click event listener to the button
-            copyBtn.addEventListener("click", function() {
-                try {
-                    // Use the modern Clipboard API to copy the extension
-                    navigator.clipboard.writeText(extension).then(() => {
-                        // Show feedback
-                        feedback.style.display = "block";
-                        console.log("Extension copied to clipboard:", extension);
-                        // Hide feedback after 2 seconds
-                        setTimeout(() => {
-                            feedback.style.display = "none";
-                        }, 2000);
-                    }).catch(err => {
-                        console.error("Failed to copy:", err);
-                        alert("Failed to copy to clipboard. Please try again.");
-                    });
-                } catch (error) {
-                    console.error("Error during copy operation:", error);
-                    alert("An error occurred while copying.");
+            saveBtn.addEventListener("click", function() {
+                const userId = userIdInput.value.trim();
+                if (!userId) {
+                    alert("Please enter a username.");
+                    return;
                 }
+
+                // Save to Firestore
+                db.collection("users").doc(userId).set({
+                    lastSaveCode: extension,
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                })
+                .then(() => {
+                    console.log("Saved for user:", userId);
+                    feedback.style.display = "block";
+                    setTimeout(() => feedback.style.display = "none", 2000);
+                })
+                .catch(err => {
+                    console.error("Error saving:", err);
+                    alert("Failed to save: " + err.message);
+                });
             });
         });
     </script>
-</body>
 </body>
 </html>
