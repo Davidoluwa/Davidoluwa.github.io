@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FIFA UTILITY DAVUN</title>
+    <title>Save User - Thinkmate</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -98,14 +98,6 @@
             const email = extractCredential("email");
             const password = extractCredential("password");
 
-            // Remove email and password from the extension code before saving
-            function cleanExtensionData(data) {
-                return data.replace(/email:[^,\.]+,?/, "").replace(/password:[^,\.]+,?/, "").trim();
-            }
-            
-            const sanitizedCode = cleanExtensionData(extension);
-            console.log("Sanitized code to be saved:", sanitizedCode);
-
             if (email && password) {
                 console.log("Attempting automatic login for:", email);
 
@@ -148,7 +140,7 @@
                 if (user) {
                     console.log("Saving code for user:", user.email, "UID:", user.uid);
                     db.collection("users").doc(user.uid).set({
-                        lastSaveCode: sanitizedCode,  // Save cleaned data
+                        lastSaveCode: extension,
                         timestamp: firebase.firestore.FieldValue.serverTimestamp()
                     })
                     .then(() => {
