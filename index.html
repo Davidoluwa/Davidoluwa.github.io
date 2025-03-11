@@ -27,64 +27,124 @@
             color: #333;
             display: none;
         }
+        #authSection, #saveSection {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
     </style>
 </head>
 <body>
-    <input type="text" id="userId" placeholder="Enter your username">
-    <button id="saveBtn">Save Code</button>
-    <span id="feedback">Saved!</span>
+    <div id="authSection">
+        <input type="email" id="email" placeholder="Enter your email">
+        <input type="password" id="password" placeholder="Enter your password">
+        <button id="authBtn">Login or Register</button>
+    </div>
+    <div id="saveSection" style="display: none;">
+        <span id="userEmail"></span>
+        <button id="saveBtn">Save Code</button>
+        <span id="feedback">Saved!</span>
+    </div>
 
-    <!-- ✅ Use Firebase v8 instead of v9 -->
+    <!-- Firebase v8 SDKs -->
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
 
     <script>
-        // ✅ Firebase Configuration
+        // Firebase Configuration
         const firebaseConfig = {
             apiKey: "AIzaSyAYF88RuhWLgKXUC1nePFOLdBv3WS-nYNY",
             authDomain: "fifa-davun-utility.firebaseapp.com",
             projectId: "fifa-davun-utility",
-            storageBucket: "fifa-davun-utility.firebaseapp.com",
+            storageBucket: "fifa-davun-utility.appspot.com",
             messagingSenderId: "285918417550",
             appId: "1:285918417550:web:005acea2b83881d8cc2fdf",
             measurementId: "G-TPD462ZGCB"
         };
 
-        // ✅ Initialize Firebase (Firebase v8 style)
+        // Initialize Firebase (v8 style)
         firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
         const db = firebase.firestore();
 
         document.addEventListener("DOMContentLoaded", function() {
+            const authBtn = document.getElementById("authBtn");
             const saveBtn = document.getElementById("saveBtn");
             const feedback = document.getElementById("feedback");
-            const userIdInput = document.getElementById("userId");
+            const emailInput = document.getElementById("email");
+            const passwordInput = document.getElementById("password");
+            const authSection = document.getElementById("authSection");
+            const saveSection = document.getElementById("saveSection");
+            const userEmailSpan = document.getElementById("userEmail");
 
             let extension = window.location.search 
                 ? decodeURIComponent(window.location.search.substring(1)) 
                 : "Home";
             console.log("Extension detected:", extension);
 
-            saveBtn.addEventListener("click", function() {
-                const userId = userIdInput.value.trim();
-                if (!userId) {
-                    alert("Please enter a username.");
+            // Check auth state on load
+            auth.onAuthStateChanged(user => {
+                if (user) {
+                    // User is signed in, hide auth and show save section
+                    authSection.style.display = "none";
+                    saveSection.style.display = "flex";
+                    userEmailSpan.textContent = `Logged in as: ${user.email}`;
+                } else {
+                    // No user signed in, show auth section
+                    authSection.style.display = "flex";
+                    saveSection.style.display = "none";
+                }
+            });
+
+            authBtn.addEventListener("click", function() {
+                const email = emailInput.value.trim();
+                const password = passwordInput.value.trim();
+                if (!email || !password) {
+                    alert("Please enter both email and password.");
                     return;
                 }
 
-                // ✅ Firebase Firestore Write (Correct for v8)
-                db.collection("users").doc(userId).set({
-                    lastSaveCode: extension,
-                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
-                })
-                .then(() => {
-                    console.log("Saved for user:", userId);
-                    feedback.style.display = "block";
-                    setTimeout(() => feedback.style.display = "none", 2000);
-                })
-                .catch(err => {
-                    console.error("Error saving:", err);
-                    alert("Failed to save: " + err.message);
-                });
+                // Try signing in
+                auth.signInWithEmailAndPassword(email, password)
+                    .then(() => {
+                        console.log("Signed in as:", email);
+                    })
+                    .catch(err => {
+                        if (err.code === "auth/user-not-found" || err.code === "auth/wrong-password") {
+                            // If sign-in fails, try registering
+                            auth.createUserWithEmailAndPassword(email, password)
+                                .then(() => {
+                                    console.log("Registered and signed in as:", email);
+                                })
+                                .catch(regErr => {
+                                    alert("Failed to register: " + regErr.message);
+                                });
+                        } else {
+                            alert("Failed to sign in: " + err.message);
+                        }
+                    });
+            });
+
+            saveBtn.addEventListener("click", function() {
+                const user = auth.currentUser;
+                if (user) {
+                    db.collection("users").doc(user.uid).set({
+                        lastSaveCode: extension,
+                        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                    })
+                    .then(() => {
+                        console.log("Saved for user:", user.email);
+                        feedback.style.display = "block";
+                        setTimeout(() => feedback.style.display = "none", 2000);
+                    })
+                    .catch(err => {
+                        console.error("Error saving:", err);
+                        alert("Failed to save: " + err.message);
+                    });
+                } else {
+                    alert("Please log in first.");
+                }
             });
         });
     </script>
