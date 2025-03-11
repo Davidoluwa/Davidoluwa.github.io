@@ -99,42 +99,38 @@
             });
 
             authBtn.addEventListener("click", function() {
-            const email = emailInput.value.trim();
-            const password = passwordInput.value.trim();
-        
-            if (!email || !password) {
-                alert("Please enter both email and password.");
-                return;
-            }
-        
-            console.log("Attempting login with:", email);
-        
-            // Try signing in first
-            auth.signInWithEmailAndPassword(email, password)
-                .then(userCredential => {
-                    console.log("Signed in successfully:", userCredential.user.email, "UID:", userCredential.user.uid);
-                })
-                .catch(signInErr => {
-                    console.log("Sign-in error:", signInErr.code, signInErr.message);
-        
-                    if (signInErr.code === "auth/user-not-found") {
-                        console.log("User not found, attempting registration...");
-        
-                        // Try registering the user
-                        auth.createUserWithEmailAndPassword(email, password)
-                            .then(userCredential => {
-                                console.log("Registered successfully:", userCredential.user.email, "UID:", userCredential.user.uid);
-                            })
-                            .catch(regErr => {
-                                console.error("Registration error:", regErr.code, regErr.message);
-                                alert("Failed to register: " + regErr.message);
-                            });
-                    } else {
-                        alert("Failed to sign in: " + signInErr.message);
-                    }
-                });
-        });
+                const email = emailInput.value.trim();
+                const password = passwordInput.value.trim();
+                if (!email || !password) {
+                    console.log("Email or password missing");
+                    alert("Please enter both email and password.");
+                    return;
+                }
+                console.log("Attempting login with:", email);
 
+                // Try signing in
+                auth.signInWithEmailAndPassword(email, password)
+                    .then(userCredential => {
+                        console.log("Signed in successfully:", userCredential.user.email, "UID:", userCredential.user.uid);
+                    })
+                    .catch(signInErr => {
+                        console.log("Sign-in error:", signInErr.code, signInErr.message);
+                        if (signInErr.code === "auth/invalid-login-credentials" || signInErr.code === "auth/user-not-found") {
+                            console.log("User not found, attempting registration with:", email);
+                            // Try registering
+                            auth.createUserWithEmailAndPassword(email, password)
+                                .then(userCredential => {
+                                    console.log("Registered and signed in:", userCredential.user.email, "UID:", userCredential.user.uid);
+                                })
+                                .catch(regErr => {
+                                    console.error("Registration error:", regErr.code, regErr.message);
+                                    alert("Failed to register: " + regErr.message);
+                                });
+                        } else {
+                            alert("Failed to sign in: " + signInErr.message);
+                        }
+                    });
+            });
 
             saveBtn.addEventListener("click", function() {
                 const user = auth.currentUser;
