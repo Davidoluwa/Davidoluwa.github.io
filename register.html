@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register - Thinkmate</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            flex-direction: column;
+        }
+        input, button {
+            padding: 10px;
+            font-size: 16px;
+            margin: 5px;
+            width: 200px;
+        }
+        #feedback {
+            margin-top: 10px;
+            font-size: 16px;
+            color: #333;
+        }
+        a {
+            color: #007bff;
+            text-decoration: none;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <input type="email" id="email" placeholder="Enter your email">
+    <input type="password" id="password" placeholder="Enter your password">
+    <button id="registerBtn">Register</button>
+    <span id="feedback"></span>
+    <p>Already have an account? <a href="https://Davidoluwa.github.io/">Login here</a></p>
+
+    <!-- Firebase v8 SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+
+    <script>
+        // Firebase Configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyAYF88RuhWLgKXUC1nePFOLdBv3WS-nYNY",
+            authDomain: "fifa-davun-utility.firebaseapp.com",
+            projectId: "fifa-davun-utility",
+            storageBucket: "fifa-davun-utility.appspot.com",
+            messagingSenderId: "285918417550",
+            appId: "1:285918417550:web:005acea2b83881d8cc2fdf",
+            measurementId: "G-TPD462ZGCB"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        console.log("Firebase initialized for registration");
+        const auth = firebase.auth();
+
+        document.addEventListener("DOMContentLoaded", function() {
+            const registerBtn = document.getElementById("registerBtn");
+            const feedback = document.getElementById("feedback");
+            const emailInput = document.getElementById("email");
+            const passwordInput = document.getElementById("password");
+
+            registerBtn.addEventListener("click", function() {
+                const email = emailInput.value.trim();
+                const password = passwordInput.value.trim();
+                feedback.textContent = ""; // Clear previous feedback
+
+                if (!email || !password) {
+                    console.log("Email or password missing");
+                    feedback.textContent = "Please enter both email and password.";
+                    return;
+                }
+                if (password.length < 6) {
+                    console.log("Password too short:", password.length);
+                    feedback.textContent = "Password must be at least 6 characters.";
+                    return;
+                }
+
+                console.log("Attempting registration with:", email);
+                auth.createUserWithEmailAndPassword(email, password)
+                    .then(userCredential => {
+                        console.log("Registered successfully:", userCredential.user.email, "UID:", userCredential.user.uid);
+                        feedback.textContent = "Registration successful! Redirecting to login...";
+                        setTimeout(() => {
+                            window.location.href = "https://Davidoluwa.github.io/";
+                        }, 2000); // Redirect after 2 seconds
+                    })
+                    .catch(err => {
+                        console.error("Registration error:", err.code, err.message);
+                        feedback.textContent = "Failed to register: " + err.message;
+                    });
+            });
+        });
+    </script>
+</body>
+</html>
