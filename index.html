@@ -5,14 +5,128 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Save User - Thinkmate</title>
     <style>
-        body { font-family: Arial, sans-serif; margin: 0; padding: 0; background-color: #f4f4f4; display: flex; justify-content: center; align-items: center; height: 100vh; flex-direction: column; }
-        input, button { padding: 10px; font-size: 16px; margin: 5px; }
-        #feedback { margin-top: 10px; font-size: 16px; color: #333; display: none; }
-        #authSection, #saveSection { display: flex; flex-direction: column; align-items: center; }
-        #failureMessage { font-size: 18px; color: #d32f2f; display: none; }
-        a { color: #007bff; text-decoration: none; }
-        a:hover { text-decoration: underline; }
-        #authSection, #saveSection, #failureMessage { display: none; }
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #2e2e2e; /* Grey-black background */
+            color: #e0e0e0; /* Light text for contrast */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            flex-direction: column;
+        }
+        input, button {
+            padding: 12px;
+            font-size: 16px;
+            margin: 8px 0;
+            border: none;
+            border-radius: 8px;
+            background-color: #424242; /* Darker input/button bg */
+            color: #e0e0e0;
+            width: 100%;
+            max-width: 300px;
+            box-sizing: border-box;
+        }
+        input:focus {
+            outline: none;
+            box-shadow: 0 0 5px #64b5f6; /* Subtle blue glow */
+        }
+        button {
+            background-color: #1976d2; /* Blue accent */
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #1565c0;
+        }
+        #authSection, #saveSection {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: #333333; /* Slightly lighter panel */
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+        }
+        #failureMessage {
+            font-size: 18px;
+            color: #ef5350; /* Red for error */
+            display: none;
+            padding: 20px;
+            background-color: #333333;
+            border-radius: 12px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+        }
+        a {
+            color: #64b5f6; /* Light blue links */
+            text-decoration: none;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+        #userEmail {
+            font-size: 18px;
+            margin-bottom: 15px;
+        }
+        #feedback {
+            margin-top: 10px;
+            font-size: 16px;
+            color: #81c784; /* Green for success */
+            display: none;
+        }
+        #saveLink {
+            color: #64b5f6;
+            cursor: pointer;
+            font-size: 16px;
+            padding: 10px;
+        }
+        #saveLink:hover {
+            color: #90caf9;
+        }
+        /* Popup Styles */
+        #savePopup {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: #424242;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.7);
+            text-align: center;
+            width: 90%;
+            max-width: 300px;
+            z-index: 1000;
+        }
+        #savePopup p {
+            margin: 0 0 15px 0;
+            font-size: 18px;
+            color: #e0e0e0;
+        }
+        #savePopup button {
+            display: block;
+            width: 100%;
+            margin: 10px 0;
+        }
+        #savePopup #yesBtn {
+            background-color: #388e3c; /* Green for Yes */
+        }
+        #savePopup #yesBtn:hover {
+            background-color: #2e7d32;
+        }
+        #savePopup #noBtn {
+            background-color: #d32f2f; /* Red for No */
+        }
+        #savePopup #noBtn:hover {
+            background-color: #c62828;
+        }
+        /* Initially hide sections */
+        #authSection, #saveSection, #failureMessage {
+            display: none;
+        }
     </style>
 </head>
 <body>
@@ -24,10 +138,15 @@
     </div>
     <div id="saveSection">
         <span id="userEmail"></span>
-        <button id="saveBtn">Save Code</button>
+        <span id="saveLink">Save Progress</span>
         <span id="feedback">Saved!</span>
     </div>
     <div id="failureMessage">Save Failed</div>
+    <div id="savePopup">
+        <p>Do you want to save your progress?</p>
+        <button id="yesBtn">Yes</button>
+        <button id="noBtn">No</button>
+    </div>
 
     <!-- Firebase v8 SDKs -->
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
@@ -51,7 +170,7 @@
 
         document.addEventListener("DOMContentLoaded", function() {
             const authBtn = document.getElementById("authBtn");
-            const saveBtn = document.getElementById("saveBtn");
+            const saveLink = document.getElementById("saveLink");
             const feedback = document.getElementById("feedback");
             const emailInput = document.getElementById("email");
             const passwordInput = document.getElementById("password");
@@ -59,6 +178,9 @@
             const saveSection = document.getElementById("saveSection");
             const failureMessage = document.getElementById("failureMessage");
             const userEmailSpan = document.getElementById("userEmail");
+            const savePopup = document.getElementById("savePopup");
+            const yesBtn = document.getElementById("yesBtn");
+            const noBtn = document.getElementById("noBtn");
 
             let extension = window.location.search ? decodeURIComponent(window.location.search.substring(1)) : "";
 
@@ -137,7 +259,11 @@
                     .catch(err => alert("Failed to sign in: " + err.message));
             });
 
-            saveBtn.addEventListener("click", function() {
+            saveLink.addEventListener("click", function() {
+                savePopup.style.display = "block"; // Show popup
+            });
+
+            yesBtn.addEventListener("click", function() {
                 const user = auth.currentUser;
                 if (user) {
                     const codeToSave = cleanedExtension || "No code provided";
@@ -147,11 +273,19 @@
                     })
                     .then(() => {
                         feedback.style.display = "block";
+                        savePopup.style.display = "none"; // Hide popup
                         setTimeout(() => feedback.style.display = "none", 2000);
-                        downloadTxtFile(codeToSave); // Trigger local .txt download
+                        downloadTxtFile(codeToSave); // Trigger download
                     })
-                    .catch(err => alert("Failed to save: " + err.message));
+                    .catch(err => {
+                        alert("Failed to save: " + err.message);
+                        savePopup.style.display = "none";
+                    });
                 }
+            });
+
+            noBtn.addEventListener("click", function() {
+                savePopup.style.display = "none"; // Hide popup without saving
             });
         });
     </script>
