@@ -10,7 +10,7 @@
             margin: 0;
             padding: 0;
             background-color: #2e2e2e; /* Grey-black background */
-            color: #e0e0e0; /* Light text for contrast */
+            color: #e0e0e0; /* Light text */
             display: flex;
             justify-content: center;
             align-items: center;
@@ -22,8 +22,7 @@
             font-size: 16px;
             margin: 8px 0;
             border: none;
-            border-radius: 8px;
-            background-color: #424242; /* Darker input/button bg */
+            background-color: #424242; /* Darker input bg */
             color: #e0e0e0;
             width: 100%;
             max-width: 300px;
@@ -34,7 +33,7 @@
             box-shadow: 0 0 5px #64b5f6; /* Subtle blue glow */
         }
         button {
-            background-color: #1976d2; /* Blue accent */
+            background-color: #1976d2; /* Blue for login */
             cursor: pointer;
             transition: background-color 0.3s;
         }
@@ -45,7 +44,7 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            background-color: #333333; /* Slightly lighter panel */
+            background-color: #333333; /* Panel bg */
             padding: 20px;
             border-radius: 12px;
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
@@ -60,7 +59,7 @@
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
         }
         a {
-            color: #64b5f6; /* Light blue links */
+            color: #64b5f6;
             text-decoration: none;
         }
         a:hover {
@@ -76,15 +75,6 @@
             color: #81c784; /* Green for success */
             display: none;
         }
-        #saveLink {
-            color: #64b5f6;
-            cursor: pointer;
-            font-size: 16px;
-            padding: 10px;
-        }
-        #saveLink:hover {
-            color: #90caf9;
-        }
         /* Popup Styles */
         #savePopup {
             display: none;
@@ -93,35 +83,42 @@
             left: 50%;
             transform: translate(-50%, -50%);
             background-color: #424242;
-            padding: 20px;
-            border-radius: 12px;
+            padding: 25px;
             box-shadow: 0 6px 15px rgba(0, 0, 0, 0.7);
             text-align: center;
             width: 90%;
             max-width: 300px;
+            min-height: 200px; /* Longer popup */
             z-index: 1000;
         }
         #savePopup p {
-            margin: 0 0 15px 0;
+            margin: 0 0 20px 0;
             font-size: 18px;
             color: #e0e0e0;
         }
         #savePopup button {
             display: block;
-            width: 100%;
+            width: 100%; /* Full width of popup */
             margin: 10px 0;
+            padding: 15px; /* Taller buttons */
+            border-radius: 0; /* Sharp-edged rectangles */
+            font-size: 16px;
+            color: #e0e0e0;
+            cursor: pointer;
+            transition: background-color 0.3s;
         }
         #savePopup #yesBtn {
-            background-color: #388e3c; /* Green for Yes */
+            background-color: #fffdd0; /* Cream */
+            color: #333333; /* Dark text for contrast */
         }
         #savePopup #yesBtn:hover {
-            background-color: #2e7d32;
+            background-color: #f0e8b8; /* Slightly darker cream */
         }
         #savePopup #noBtn {
-            background-color: #d32f2f; /* Red for No */
+            background-color: #808080; /* Grey */
         }
         #savePopup #noBtn:hover {
-            background-color: #c62828;
+            background-color: #666666; /* Darker grey */
         }
         /* Initially hide sections */
         #authSection, #saveSection, #failureMessage {
@@ -138,7 +135,6 @@
     </div>
     <div id="saveSection">
         <span id="userEmail"></span>
-        <span id="saveLink">Save Progress</span>
         <span id="feedback">Saved!</span>
     </div>
     <div id="failureMessage">Save Failed</div>
@@ -170,7 +166,6 @@
 
         document.addEventListener("DOMContentLoaded", function() {
             const authBtn = document.getElementById("authBtn");
-            const saveLink = document.getElementById("saveLink");
             const feedback = document.getElementById("feedback");
             const emailInput = document.getElementById("email");
             const passwordInput = document.getElementById("password");
@@ -234,6 +229,7 @@
                 saveSection.style.display = "flex";
                 failureMessage.style.display = "none";
                 userEmailSpan.textContent = `Logged in as: ${user.email}`;
+                savePopup.style.display = "block"; // Show popup immediately
             }
 
             auth.onAuthStateChanged(user => {
@@ -257,10 +253,6 @@
                         showSaveSection(userCredential.user);
                     })
                     .catch(err => alert("Failed to sign in: " + err.message));
-            });
-
-            saveLink.addEventListener("click", function() {
-                savePopup.style.display = "block"; // Show popup
             });
 
             yesBtn.addEventListener("click", function() {
