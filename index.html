@@ -11,18 +11,53 @@
             padding: 0;
             background-color: #2e2e2e; /* Grey-black background */
             color: #e0e0e0; /* Light text */
-            display: flex; 
+            display: flex;
             justify-content: center;
             align-items: center;
             height: 100vh;
             flex-direction: column;
+            position: relative;
+            overflow: hidden; /* Prevent overflow */
         }
+        /* Animated DAVUN Background */
+        .bg-text {
+            position: absolute;
+            top: 90%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 80px; /* Large bold text */
+            font-weight: bold;
+            color: rgba(255, 255, 255, 0.1); /* Faint white */
+            text-transform: uppercase;
+            z-index: 0;
+            pointer-events: none;
+        }
+        .bg-text span {
+            position: relative;
+            display: inline-block;
+            animation: glow 4s infinite ease-in-out;
+        }
+        /* Stagger animation for each letter */
+        .bg-text span:nth-child(1) { animation-delay: 0s; }
+        .bg-text span:nth-child(2) { animation-delay: 0.2s; }
+        .bg-text span:nth-child(3) { animation-delay: 0.4s; }
+        .bg-text span:nth-child(4) { animation-delay: 0.6s; }
+        .bg-text span:nth-child(5) { animation-delay: 0.8s; }
+        @keyframes glow {
+            0%, 100% {
+                text-shadow: 0 0 5px rgba(129, 199, 132, 0.2); /* Faint green */
+            }
+            50% {
+                text-shadow: 0 0 20px #81c784, 0 0 40px #81c784; /* Bright green glow */
+            }
+        }
+        /* Content Styles */
         input, button {
             padding: 12px;
             font-size: 16px;
             margin: 8px 0;
             border: none;
-            background-color: #424242; /* Darker input bg */
+            background-color: #424242;
             color: #e0e0e0;
             width: 100%;
             max-width: 300px;
@@ -30,10 +65,10 @@
         }
         input:focus {
             outline: none;
-            box-shadow: 0 0 5px #64b5f6; /* Subtle blue glow */
+            box-shadow: 0 0 5px #64b5f6;
         }
         button {
-            background-color: #1976d2; /* Blue for login */
+            background-color: #1976d2;
             cursor: pointer;
             transition: background-color 0.3s;
         }
@@ -44,19 +79,23 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            background-color: #333333; /* Panel bg */
+            background-color: #333333;
             padding: 20px;
             border-radius: 12px;
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+            position: relative;
+            z-index: 1; /* Above background */
         }
         #failureMessage {
             font-size: 18px;
-            color: #ef5350; /* Red for error */
+            color: #ef5350;
             display: none;
             padding: 20px;
             background-color: #333333;
             border-radius: 12px;
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+            position: relative;
+            z-index: 1;
         }
         a {
             color: #64b5f6;
@@ -72,7 +111,7 @@
         #feedback {
             margin-top: 10px;
             font-size: 16px;
-            color: #81c784; /* Green for success */
+            color: #81c784;
             display: none;
         }
         /* Popup Styles */
@@ -82,35 +121,38 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            background-color: #424242;
+            background-color: #2e2e2e;
             padding: 20px; /* Reduced padding */
             box-shadow: 0 6px 15px rgba(0, 0, 0, 0.7);
             text-align: center;
-            width: 90%;
-            max-width: 300px;
-            min-height: 180px; /* Reduced height from 200px */
+            width: 120%;
+            max-width: 350px;
+            min-height: 150px; /* Reduced height from 200px */
             box-sizing: border-box; /* Include padding in width/height */
             z-index: 1000;
         }
         #savePopup p {
             margin: 0 0 15px 0; /* Slightly reduced margin */
-            font-size: 18px;
+            font-size: 14px;
             color: #e0e0e0;
         }
         #savePopup button {
             display: block;
-            width: 150%; /* Full width of popup */
-            margin: 8px 0; /* Reduced margin for compactness */
-            padding: 12px 0; /* Vertical padding only, no horizontal */
+            margin: 30px 0; /* Reduced margin for compactness */
+            padding: 7px 0; /* Vertical padding only, no horizontal */
             border-radius: 0; /* Sharp-edged rectangles */
-            font-size: 16px;
+            font-size: 12px;
             color: #e0e0e0;
             cursor: pointer;
+			max-width: 350px;
             transition: background-color 0.3s;
             box-sizing: border-box; /* Match popup width precisely */
         }
         #savePopup #yesBtn {
-            background-color: #808080; /* White */
+            background-color: #ffffff; /* White */
+			position: fixed;
+            left: 0%;
+			top: 55%;
             color: #333333; /* Dark text for contrast */
         }
         #savePopup #yesBtn:hover {
@@ -118,6 +160,8 @@
         }
         #savePopup #noBtn {
             background-color: #808080; /* Grey */
+			position: fixed;
+            left: 0%;
         }
         #savePopup #noBtn:hover {
             background-color: #666666; /* Darker grey */
@@ -129,6 +173,9 @@
     </style>
 </head>
 <body>
+    <div class="bg-text">
+        <span>D</span><span>A</span><span>V</span><span>U</span><span>N</span>
+    </div>
     <div id="authSection">
         <input type="email" id="email" placeholder="Enter your email">
         <input type="password" id="password" placeholder="Enter your password">
