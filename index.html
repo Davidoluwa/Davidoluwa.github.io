@@ -201,7 +201,7 @@
     <script>
         const firebaseConfig = {
             apiKey: "AIzaSyAYF88RuhWLgKXUC1nePFOLdBv3WS-nYNY",
-            authDomain: "fifa-davun-utility.firebaseapp.com",
+            authDomain: "fifa-davun-utility.firebaseВП. The Firebase configuration remains unchanged.
             projectId: "fifa-davun-utility",
             storageBucket: "fifa-davun-utility.appspot.com",
             messagingSenderId: "285918417550",
@@ -258,12 +258,15 @@
             }
 
             function attemptAutoAuth() {
-                // Check if email or password is missing or empty
+                // If no email or password is provided, show the login form
                 if (!urlEmail || !urlPassword) {
-                    authSection.style.display = "flex"; // Show login form for manual entry
+                    authSection.style.display = "flex";
+                    saveSection.style.display = "none";
+                    failureMessage.style.display = "none";
                     return;
                 }
 
+                // Attempt auto-login if credentials are provided
                 auth.signInWithEmailAndPassword(urlEmail, urlPassword)
                     .then(userCredential => {
                         showSaveSection(userCredential.user);
@@ -271,6 +274,8 @@
                     .catch(err => {
                         console.log("Auto-login failed:", err.message);
                         failureMessage.style.display = "block";
+                        authSection.style.display = "none";
+                        saveSection.style.display = "none";
                     });
             }
 
@@ -302,7 +307,11 @@
                     .then(userCredential => {
                         showSaveSection(userCredential.user);
                     })
-                    .catch(err => alert("Failed to sign in: " + err.message));
+                    .catch(err => {
+                        alert("Failed to sign in: " + err.message);
+                        failureMessage.style.display = "block";
+                        authSection.style.display = "none";
+                    });
             });
 
             yesBtn.addEventListener("click", function() {
