@@ -186,7 +186,6 @@
         <input type="email" id="email" placeholder="Enter your email">
         <input type="password" id="password" placeholder="Enter your password">
         <button id="authBtn">Login</button>
-        <p>New user? <a href="https://Davidoluwa.github.io/register.html">Register here</a></p>
     </div>
     <div id="saveSection">
         <span id="userEmail"></span>
@@ -233,10 +232,13 @@
             const noBtn = document.getElementById("noBtn");
 
             let extension = window.location.search ? decodeURIComponent(window.location.search.substring(1)) : "";
+            console.log("Raw URI extension:", extension);
 
             function extractCredential(keyword, delimiter) {
                 const match = extension.match(new RegExp(`${keyword}:(.*?)[${delimiter}]`));
-                return match ? match[1].trim() : "";
+                const result = match ? match[1].trim() : "";
+                console.log(`Extracted ${keyword}:`, result);
+                return result;
             }
 
             const urlEmail = extractCredential("email", ",");
@@ -250,6 +252,7 @@
                     .trim();
             }
             const cleanedExtension = cleanExtension(extension);
+            console.log("Cleaned extension:", cleanedExtension);
 
             function downloadTxtFile(content) {
                 const blob = new Blob([content], { type: "text/plain" });
@@ -274,6 +277,7 @@
                 }
 
                 // Attempt auto-login if credentials are provided
+                console.log("Attempting auto-login with email:", urlEmail);
                 auth.signInWithEmailAndPassword(urlEmail, urlPassword)
                     .then(userCredential => {
                         showSaveSection(userCredential.user);
