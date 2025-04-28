@@ -144,15 +144,15 @@
             font-size: 12px;
             color: #e0e0e0;
             cursor: pointer;
-			max-width: 350px;
+            max-width: 350px;
             transition: background-color 0.3s;
             box-sizing: border-box; /* Match popup width precisely */
         }
         #savePopup #yesBtn {
             background-color: #ffffff; /* White */
-			position: fixed;
+            position: fixed;
             left: 0%;
-			top: 55%;
+            top: 55%;
             color: #333333; /* Dark text for contrast */
         }
         #savePopup #yesBtn:hover {
@@ -160,7 +160,7 @@
         }
         #savePopup #noBtn {
             background-color: #808080; /* Grey */
-			position: fixed;
+            position: fixed;
             left: 0%;
         }
         #savePopup #noBtn:hover {
@@ -258,8 +258,9 @@
             }
 
             function attemptAutoAuth() {
+                // Check if email or password is missing or empty
                 if (!urlEmail || !urlPassword) {
-                    failureMessage.style.display = "block";
+                    authSection.style.display = "flex"; // Show login form for manual entry
                     return;
                 }
 
