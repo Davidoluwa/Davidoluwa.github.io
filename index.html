@@ -29,7 +29,7 @@
             font-weight: bold;
             color: rgba(255, 255, 255, 0.1); /* Faint white */
             text-transform: uppercase;
-            z-index: 0;
+            z-index: 0; /* Ensure background stays behind */
             pointer-events: none;
         }
         .bg-text span {
@@ -84,7 +84,10 @@
             border-radius: 12px;
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
             position: relative;
-            z-index: 1; /* Above background */
+            z-index: 10; /* Higher z-index to ensure visibility */
+            width: 100%;
+            max-width: 350px; /* Consistent width */
+            box-sizing: border-box;
         }
         #failureMessage {
             font-size: 18px;
@@ -95,7 +98,10 @@
             border-radius: 12px;
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
             position: relative;
-            z-index: 1;
+            z-index: 10; /* Ensure visibility */
+            text-align: center;
+            width: 100%;
+            max-width: 350px;
         }
         a {
             color: #64b5f6;
@@ -122,49 +128,49 @@
             left: 50%;
             transform: translate(-50%, -50%);
             background-color: #2e2e2e;
-            padding: 20px; /* Reduced padding */
+            padding: 20px;
             box-shadow: 0 6px 15px rgba(0, 0, 0, 0.7);
             text-align: center;
-            width: 120%;
+            width: 100%;
             max-width: 350px;
-            min-height: 150px; /* Reduced height from 200px */
-            box-sizing: border-box; /* Include padding in width/height */
-            z-index: 1000;
+            min-height: 150px;
+            box-sizing: border-box;
+            z-index: 1000; /* High z-index for popup */
         }
         #savePopup p {
-            margin: 0 0 15px 0; /* Slightly reduced margin */
+            margin: 0 0 15px 0;
             font-size: 14px;
             color: #e0e0e0;
         }
         #savePopup button {
             display: block;
-            margin: 30px 0; /* Reduced margin for compactness */
-            padding: 7px 0; /* Vertical padding only, no horizontal */
-            border-radius: 0; /* Sharp-edged rectangles */
+            margin: 30px 0;
+            padding: 7px 0;
+            border-radius: 0;
             font-size: 12px;
             color: #e0e0e0;
             cursor: pointer;
             max-width: 350px;
             transition: background-color 0.3s;
-            box-sizing: border-box; /* Match popup width precisely */
+            box-sizing: border-box;
         }
         #savePopup #yesBtn {
-            background-color: #ffffff; /* White */
+            background-color: #ffffff;
             position: fixed;
             left: 0%;
             top: 55%;
-            color: #333333; /* Dark text for contrast */
+            color: #333333;
         }
         #savePopup #yesBtn:hover {
-            background-color: #e0e0e0; /* Slightly greyed white on hover */
+            background-color: #e0e0e0;
         }
         #savePopup #noBtn {
-            background-color: #808080; /* Grey */
+            background-color: #808080;
             position: fixed;
             left: 0%;
         }
         #savePopup #noBtn:hover {
-            background-color: #666666; /* Darker grey */
+            background-color: #666666;
         }
         /* Initially hide sections */
         #authSection, #saveSection, #failureMessage {
@@ -201,7 +207,7 @@
     <script>
         const firebaseConfig = {
             apiKey: "AIzaSyAYF88RuhWLgKXUC1nePFOLdBv3WS-nYNY",
-            authDomain: "fifa-davun-utility.firebaseВП. The Firebase configuration remains unchanged.
+            authDomain: "fifa-davun-utility.firebaseapp.com",
             projectId: "fifa-davun-utility",
             storageBucket: "fifa-davun-utility.appspot.com",
             messagingSenderId: "285918417550",
@@ -263,6 +269,7 @@
                     authSection.style.display = "flex";
                     saveSection.style.display = "none";
                     failureMessage.style.display = "none";
+                    console.log("Showing authSection: No email or password in URI");
                     return;
                 }
 
@@ -284,7 +291,8 @@
                 saveSection.style.display = "flex";
                 failureMessage.style.display = "none";
                 userEmailSpan.textContent = `Logged in as: ${user.email}`;
-                savePopup.style.display = "block"; // Show popup immediately
+                savePopup.style.display = "block";
+                console.log("Showing saveSection for user:", user.email);
             }
 
             auth.onAuthStateChanged(user => {
@@ -324,9 +332,9 @@
                     })
                     .then(() => {
                         feedback.style.display = "block";
-                        savePopup.style.display = "none"; // Hide popup
+                        savePopup.style.display = "none";
                         setTimeout(() => feedback.style.display = "none", 2000);
-                        downloadTxtFile(codeToSave); // Trigger download
+                        downloadTxtFile(codeToSave);
                     })
                     .catch(err => {
                         alert("Failed to save: " + err.message);
@@ -336,7 +344,7 @@
             });
 
             noBtn.addEventListener("click", function() {
-                savePopup.style.display = "none"; // Hide popup without saving
+                savePopup.style.display = "none";
             });
         });
     </script>
