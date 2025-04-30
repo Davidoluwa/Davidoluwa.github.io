@@ -19,7 +19,6 @@
             position: relative;
             overflow: hidden;
         }
-        /* Animated DAVUN Background */
         .bg-text {
             position: absolute;
             top: 90%;
@@ -45,9 +44,8 @@
             0%, 100% { text-shadow: 0 0 5px rgba(129, 199, 132, 0.3); }
             50% { text-shadow: 0 0 20px #81c784, 0 0 40px #81c784; }
         }
-        /* Glassmorphism Form */
         #authSection, #saveSection {
-            display: flex;
+            display: none;
             flex-direction: column;
             align-items: center;
             background: rgba(255, 255, 255, 0.05);
@@ -64,6 +62,7 @@
             transition: transform 0.3s ease, opacity 0.3s ease;
         }
         #authSection.active {
+            display: flex;
             transform: scale(1);
             opacity: 1;
         }
@@ -150,7 +149,6 @@
             color: #81c784;
             display: none;
         }
-        /* Countdown Timer */
         #countdown {
             display: none;
             margin: 15px 0;
@@ -172,7 +170,6 @@
             color: #81c784;
             text-shadow: 0 0 5px rgba(129, 199, 132, 0.5);
         }
-        /* Popup Styles */
         #savePopup {
             display: none;
             position: fixed;
@@ -212,9 +209,6 @@
         #savePopup #noBtn:hover {
             background: linear-gradient(45deg, #666666, #808080);
         }
-        #authSection, #saveSection, #failureMessage {
-            display: none;
-        }
     </style>
 </head>
 <body>
@@ -246,6 +240,8 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
 
     <script>
+        console.log("Script started");
+
         const firebaseConfig = {
             apiKey: "AIzaSyAYF88RuhWLgKXUC1nePFOLdBv3WS-nYNY",
             authDomain: "fifa-davun-utility.firebaseapp.com",
@@ -256,11 +252,19 @@
             measurementId: "G-TPD462ZGCB"
         };
 
-        firebase.initializeApp(firebaseConfig);
+        try {
+            firebase.initializeApp(firebaseConfig);
+            console.log("Firebase initialized");
+        } catch (error) {
+            console.error("Firebase initialization failed:", error);
+        }
+
         const auth = firebase.auth();
         const db = firebase.firestore();
 
         document.addEventListener("DOMContentLoaded", function() {
+            console.log("DOM fully loaded");
+
             const authBtn = document.getElementById("authBtn");
             const authTitle = document.getElementById("authTitle");
             const toggleAuth = document.getElementById("toggleAuth");
@@ -276,6 +280,11 @@
             const savePopup = document.getElementById("savePopup");
             const yesBtn = document.getElementById("yesBtn");
             const noBtn = document.getElementById("noBtn");
+
+            if (!authSection || !saveSection || !savePopup) {
+                console.error("Critical elements missing:", { authSection, saveSection, savePopup });
+                return;
+            }
 
             let isRegisterMode = false;
             let extension = window.location.search ? decodeURIComponent(window.location.search.substring(1)) : "";
@@ -293,7 +302,7 @@
                         isRegisterMode = false;
                         authTitle.textContent = "Login";
                         authBtn.textContent = "Login";
-                        alert("Registration period has ended.");
+                        console.log("Registration period ended, switching to login");
                     }
                     return false;
                 }
@@ -306,6 +315,7 @@
             }
             setInterval(updateTimer, 1000);
             const isRegistrationOpen = updateTimer();
+            console.log("Registration open:", isRegistrationOpen);
 
             function extractCredential(keyword, delimiter) {
                 const match = extension.match(new RegExp(`${keyword}:(.*?)[${delimiter}]`));
@@ -340,6 +350,7 @@
             }
 
             function showSaveSection(user) {
+                console.log("Showing save section for user:", user.email);
                 authSection.classList.remove("active");
                 authSection.classList.add("inactive");
                 setTimeout(() => {
@@ -348,34 +359,36 @@
                     failureMessage.style.display = "none";
                     userEmailSpan.textContent = `Logged in as: ${user.email}`;
                     savePopup.style.display = "block";
-                    console.log("Showing saveSection for user:", user.email);
                 }, 300);
             }
 
             function attemptAutoAuth() {
+                console.log("Attempting auto-auth with email:", urlEmail);
                 if (!urlEmail || !urlPassword) {
+                    console.log("No URL credentials, showing auth section");
                     authSection.style.display = "flex";
                     authSection.classList.add("active");
                     saveSection.style.display = "none";
                     failureMessage.style.display = "none";
-                    console.log("Showing authSection: No email or password in URI");
                     return;
                 }
 
-                console.log("Attempting auto-login with email:", urlEmail);
                 auth.signInWithEmailAndPassword(urlEmail, urlPassword)
                     .then(userCredential => {
+                        console.log("Auto-login successful");
                         showSaveSection(userCredential.user);
                     })
                     .catch(err => {
-                        console.log vpcp://discord.com/channels/1258453367318478979/1258453368052424757/1312751034688016384("Auto-login failed:", err.message);
-                        failureMessage.style.display = "block";
-                        authSection.style.display = "none";
+                        console.error("Auto-login failed:", err.message);
+                        authSection.style.display = "flex";
+                        authSection.classList.add("active");
                         saveSection.style.display = "none";
+                        failureMessage.style.display = "block";
                     });
             }
 
             auth.onAuthStateChanged(user => {
+                console.log("Auth state changed, user:", user ? user.email : "none");
                 if (user) {
                     showSaveSection(user);
                 } else {
@@ -384,6 +397,7 @@
             });
 
             toggleAuth.addEventListener("click", function() {
+                console.log("Toggle auth clicked, current mode:", isRegisterMode);
                 if (!isRegistrationOpen && !isRegisterMode) {
                     alert("Registration period has ended.");
                     return;
@@ -409,6 +423,7 @@
             });
 
             authBtn.addEventListener("click", function() {
+                console.log("Auth button clicked, mode:", isRegisterMode ? "register" : "login");
                 const email = emailInput.value.trim();
                 const password = passwordInput.value.trim();
                 if (!email || !password) {
@@ -423,9 +438,11 @@
                     }
                     auth.createUserWithEmailAndPassword(email, password)
                         .then(userCredential => {
+                            console.log("Registration successful");
                             showSaveSection(userCredential.user);
                         })
                         .catch(err => {
+                            console.error("Registration failed:", err.message);
                             alert("Failed to register: " + err.message);
                             failureMessage.style.display = "block";
                             authSection.style.display = "none";
@@ -433,9 +450,11 @@
                 } else {
                     auth.signInWithEmailAndPassword(email, password)
                         .then(userCredential => {
+                            console.log("Login successful");
                             showSaveSection(userCredential.user);
                         })
                         .catch(err => {
+                            console.error("Login failed:", err.message);
                             alert("Failed to sign in: " + err.message);
                             failureMessage.style.display = "block";
                             authSection.style.display = "none";
@@ -444,6 +463,7 @@
             });
 
             yesBtn.addEventListener("click", function() {
+                console.log("Yes button clicked");
                 const user = auth.currentUser;
                 if (user) {
                     const codeToSave = cleanedExtension || "No code provided";
@@ -452,12 +472,14 @@
                         timestamp: firebase.firestore.FieldValue.serverTimestamp()
                     })
                     .then(() => {
+                        console.log("Save successful");
                         feedback.style.display = "block";
                         savePopup.style.display = "none";
                         setTimeout(() => feedback.style.display = "none", 2000);
                         downloadTxtFile(codeToSave);
                     })
                     .catch(err => {
+                        console.error("Save failed:", err.message);
                         alert("Failed to save: " + err.message);
                         savePopup.style.display = "none";
                     });
@@ -465,8 +487,14 @@
             });
 
             noBtn.addEventListener("click", function() {
+                console.log("No button clicked");
                 savePopup.style.display = "none";
             });
+
+            // Initial display
+            authSection.style.display = "flex";
+            authSection.classList.add("active");
+            console.log("Initial display set to authSection");
         });
     </script>
 </body>
