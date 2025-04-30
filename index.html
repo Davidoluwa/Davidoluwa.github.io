@@ -9,27 +9,26 @@
             font-family: 'Segoe UI', Arial, sans-serif;
             margin: 0;
             padding: 0;
-            background-color: #2e2e2e; /* Grey-black background */
-            color: #e0e0e0; /* Light text */
+            background-color: #2e2e2e;
+            color: #e0e0e0;
             display: flex;
             justify-content: center;
             align-items: center;
             height: 100vh;
             flex-direction: column;
             position: relative;
-            overflow: hidden; /* Prevent overflow */
+            overflow: hidden;
         }
-        /* Animated DAVUN Background */
         .bg-text {
             position: absolute;
             top: 90%;
             left: 50%;
             transform: translate(-50%, -50%);
-            font-size: 80px; /* Large bold text */
+            font-size: 80px;
             font-weight: bold;
-            color: rgba(255, 255, 255, 0.1); /* Faint white */
+            color: rgba(255, 255, 255, 0.1);
             text-transform: uppercase;
-            z-index: 0; /* Ensure background stays behind */
+            z-index: 0;
             pointer-events: none;
         }
         .bg-text span {
@@ -37,7 +36,6 @@
             display: inline-block;
             animation: glow 4s infinite ease-in-out;
         }
-        /* Stagger animation for each letter */
         .bg-text span:nth-child(1) { animation-delay: 0s; }
         .bg-text span:nth-child(2) { animation-delay: 0.2s; }
         .bg-text span:nth-child(3) { animation-delay: 0.4s; }
@@ -45,13 +43,12 @@
         .bg-text span:nth-child(5) { animation-delay: 0.8s; }
         @keyframes glow {
             0%, 100% {
-                text-shadow: 0 0 5px rgba(129, 199, 132, 0.2); /* Faint green */
+                text-shadow: 0 0 5px rgba(129, 199, 132, 0.2);
             }
             50% {
-                text-shadow: 0 0 20px #81c784, 0 0 40px #81c784; /* Bright green glow */
+                text-shadow: 0 0 20px #81c784, 0 0 40px #81c784;
             }
         }
-        /* Content Styles */
         input, button {
             padding: 12px;
             font-size: 16px;
@@ -84,9 +81,9 @@
             border-radius: 12px;
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
             position: relative;
-            z-index: 10; /* Higher z-index to ensure visibility */
+            z-index: 10;
             width: 100%;
-            max-width: 350px; /* Consistent width */
+            max-width: 350px;
             box-sizing: border-box;
         }
         #failureMessage {
@@ -98,16 +95,18 @@
             border-radius: 12px;
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
             position: relative;
-            z-index: 10; /* Ensure visibility */
+            z-index: 10;
             text-align: center;
             width: 100%;
             max-width: 350px;
         }
-        a {
+        a, .toggle-link {
             color: #64b5f6;
             text-decoration: none;
+            cursor: pointer;
+            margin-top: 10px;
         }
-        a:hover {
+        a:hover, .toggle-link:hover {
             text-decoration: underline;
         }
         #userEmail {
@@ -120,7 +119,6 @@
             color: #81c784;
             display: none;
         }
-        /* Popup Styles */
         #savePopup {
             display: none;
             position: fixed;
@@ -135,7 +133,7 @@
             max-width: 350px;
             min-height: 150px;
             box-sizing: border-box;
-            z-index: 1000; /* High z-index for popup */
+            z-index: 1000;
         }
         #savePopup p {
             margin: 0 0 15px 0;
@@ -172,7 +170,6 @@
         #savePopup #noBtn:hover {
             background-color: #666666;
         }
-        /* Initially hide sections */
         #authSection, #saveSection, #failureMessage {
             display: none;
         }
@@ -183,9 +180,11 @@
         <span>D</span><span>A</span><span>V</span><span>U</span><span>N</span>
     </div>
     <div id="authSection">
+        <h3 id="authTitle">Login</h3>
         <input type="email" id="email" placeholder="Enter your email">
         <input type="password" id="password" placeholder="Enter your password">
         <button id="authBtn">Login</button>
+        <span class="toggle-link" id="toggleAuth">Don't have an account? Register</span>
     </div>
     <div id="saveSection">
         <span id="userEmail"></span>
@@ -220,6 +219,8 @@
 
         document.addEventListener("DOMContentLoaded", function() {
             const authBtn = document.getElementById("authBtn");
+            const authTitle = document.getElementById("authTitle");
+            const toggleAuth = document.getElementById("toggleAuth");
             const feedback = document.getElementById("feedback");
             const emailInput = document.getElementById("email");
             const passwordInput = document.getElementById("password");
@@ -231,6 +232,7 @@
             const yesBtn = document.getElementById("yesBtn");
             const noBtn = document.getElementById("noBtn");
 
+            let isRegisterMode = false; // Track whether in login or register mode
             let extension = window.location.search ? decodeURIComponent(window.location.search.substring(1)) : "";
             console.log("Raw URI extension:", extension);
 
@@ -266,8 +268,16 @@
                 window.URL.revokeObjectURL(url);
             }
 
+            function showSaveSection(user) {
+                authSection.style.display = "none";
+                saveSection.style.display = "flex";
+                failureMessage.style.display = "none";
+                userEmailSpan.textContent = `Logged in as: ${user.email}`;
+                savePopup.style.display = "block";
+                console.log("Showing saveSection for user:", user.email);
+            }
+
             function attemptAutoAuth() {
-                // If no email or password is provided, show the login form
                 if (!urlEmail || !urlPassword) {
                     authSection.style.display = "flex";
                     saveSection.style.display = "none";
@@ -276,7 +286,6 @@
                     return;
                 }
 
-                // Attempt auto-login if credentials are provided
                 console.log("Attempting auto-login with email:", urlEmail);
                 auth.signInWithEmailAndPassword(urlEmail, urlPassword)
                     .then(userCredential => {
@@ -290,15 +299,6 @@
                     });
             }
 
-            function showSaveSection(user) {
-                authSection.style.display = "none";
-                saveSection.style.display = "flex";
-                failureMessage.style.display = "none";
-                userEmailSpan.textContent = `Logged in as: ${user.email}`;
-                savePopup.style.display = "block";
-                console.log("Showing saveSection for user:", user.email);
-            }
-
             auth.onAuthStateChanged(user => {
                 if (user) {
                     showSaveSection(user);
@@ -307,6 +307,23 @@
                 }
             });
 
+            // Toggle between login and registration
+            toggleAuth.addEventListener("click", function() {
+                isRegisterMode = !isRegisterMode;
+                if (isRegisterMode) {
+                    authTitle.textContent = "Register";
+                    authBtn.textContent = "Register";
+                    toggleAuth.textContent = "Already have an account? Login";
+                } else {
+                    authTitle.textContent = "Login";
+                    authBtn.textContent = "Login";
+                    toggleAuth.textContent = "Don't have an account? Register";
+                }
+                emailInput.value = "";
+                passwordInput.value = "";
+            });
+
+            // Handle login or registration
             authBtn.addEventListener("click", function() {
                 const email = emailInput.value.trim();
                 const password = passwordInput.value.trim();
@@ -315,15 +332,29 @@
                     return;
                 }
 
-                auth.signInWithEmailAndPassword(email, password)
-                    .then(userCredential => {
-                        showSaveSection(userCredential.user);
-                    })
-                    .catch(err => {
-                        alert("Failed to sign in: " + err.message);
-                        failureMessage.style.display = "block";
-                        authSection.style.display = "none";
-                    });
+                if (isRegisterMode) {
+                    // Register new user
+                    auth.createUserWithEmailAndPassword(email, password)
+                        .then(userCredential => {
+                            showSaveSection(userCredential.user);
+                        })
+                        .catch(err => {
+                            alert("Failed to register: " + err.message);
+                            failureMessage.style.display = "block";
+                            authSection.style.display = "none";
+                        });
+                } else {
+                    // Login existing user
+                    auth.signInWithEmailAndPassword(email, password)
+                        .then(userCredential => {
+                            showSaveSection(userCredential.user);
+                        })
+                        .catch(err => {
+                            alert("Failed to sign in: " + err.message);
+                            failureMessage.style.display = "block";
+                            authSection.style.display = "none";
+                        });
+                }
             });
 
             yesBtn.addEventListener("click", function() {
