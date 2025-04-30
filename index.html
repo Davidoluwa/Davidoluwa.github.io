@@ -3,14 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Save User - Thinkmate</title>
+    <title>FC25 Mobile Save - Davun</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
     <style>
         body {
-            font-family: 'Segoe UI', Arial, sans-serif;
+            font-family: 'Orbitron', sans-serif;
             margin: 0;
             padding: 0;
-            background: linear-gradient(135deg, #1a1a1a, #2e2e2e);
-            color: #e0e0e0;
+            background: radial-gradient(circle at center, #0a0a0a, #1a1a1a);
+            color: #f0f0f0;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -19,47 +20,84 @@
             position: relative;
             overflow: hidden;
         }
+        /* Dynamic Background */
         .bg-text {
             position: absolute;
-            top: 90%;
+            top: 85%;
             left: 50%;
             transform: translate(-50%, -50%);
-            font-size: 100px;
-            font-weight: bold;
-            color: rgba(255, 255, 255, 0.05);
+            font-size: 120px;
+            font-weight: 700;
+            color: rgba(0, 240, 255, 0.1);
             text-transform: uppercase;
             z-index: 0;
             pointer-events: none;
+            animation: glitch 5s infinite;
         }
         .bg-text span {
             display: inline-block;
-            animation: glow 4s infinite ease-in-out;
+            animation: neonGlow 3s infinite ease-in-out;
         }
         .bg-text span:nth-child(1) { animation-delay: 0s; }
-        .bg-text span:nth-child(2) { animation-delay: 0.2s; }
-        .bg-text span:nth-child(3) { animation-delay: 0.4s; }
-        .bg-text span:nth-child(4) { animation-delay: 0.6s; }
-        .bg-text span:nth-child(5) { animation-delay: 0.8s; }
-        @keyframes glow {
-            0%, 100% { text-shadow: 0 0 5px rgba(129, 199, 132, 0.3); }
-            50% { text-shadow: 0 0 20px #81c784, 0 0 40px #81c784; }
+        .bg-text span:nth-child(2) { animation-delay: 0.3s; }
+        .bg-text span:nth-child(3) { animation-delay: 0.6s; }
+        .bg-text span:nth-child(4) { animation-delay: 0.9s; }
+        .bg-text span:nth-child(5) { animation-delay: 1.2s; }
+        @keyframes glitch {
+            0%, 100% { transform: translate(-50%, -50%); }
+            2% { transform: translate(-48%, -50%) skew(5deg); }
+            4% { transform: translate(-52%, -50%) skew(-5deg); }
+            6% { transform: translate(-50%, -50%); }
         }
+        @keyframes neonGlow {
+            0%, 100% { text-shadow: 0 0 5px #00f0ff, 0 0 10px #00f0ff; }
+            50% { text-shadow: 0 0 20px #00f0ff, 0 0 30px #00f0ff; }
+        }
+        /* Particle Overlay */
+        .particles {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg"><circle cx="2" cy="2" r="1" fill="rgba(0,240,255,0.2)"/></svg>') repeat;
+            opacity: 0.3;
+            animation: float 20s infinite linear;
+            z-index: 1;
+        }
+        @keyframes float {
+            0% { background-position: 0 0; }
+            100% { background-position: 100px 100px; }
+        }
+        /* Holographic Form */
         #authSection, #saveSection {
             display: none;
             flex-direction: column;
             align-items: center;
-            background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(10px);
-            padding: 30px;
-            border-radius: 16px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: linear-gradient(145deg, rgba(10, 10, 10, 0.9), rgba(30, 30, 30, 0.8));
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 0 30px rgba(0, 240, 255, 0.3), inset 0 0 10px rgba(255, 255, 255, 0.1);
+            border: 2px solid transparent;
+            background-clip: padding-box;
             position: relative;
             z-index: 10;
             width: 100%;
-            max-width: 400px;
+            max-width: 420px;
             box-sizing: border-box;
-            transition: transform 0.3s ease, opacity 0.3s ease;
+            animation: slideIn 0.5s ease-out;
+        }
+        #authSection::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            background: linear-gradient(45deg, #00f0ff, #ff00ff);
+            z-index: -1;
+            border-radius: 22px;
+            filter: blur(5px);
         }
         #authSection.active {
             display: flex;
@@ -70,126 +108,148 @@
             transform: scale(0.95);
             opacity: 0;
         }
+        @keyframes slideIn {
+            from { transform: translateY(50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
         h3 {
-            margin: 0 0 20px;
-            font-size: 24px;
-            color: #64b5f6;
-            text-shadow: 0 0 10px rgba(100, 181, 246, 0.5);
+            margin: 0 0 25px;
+            font-size: 28px;
+            color: #00f0ff;
+            text-shadow: 0 0 15px rgba(0, 240, 255, 0.7);
+            letter-spacing: 2px;
         }
         input {
-            padding: 12px;
+            padding: 14px;
             font-size: 16px;
-            margin: 10px 0;
+            margin: 12px 0;
             border: none;
-            background: rgba(255, 255, 255, 0.1);
-            color: #e0e0e0;
+            background: transparent;
+            color: #f0f0f0;
             width: 100%;
-            border-radius: 8px;
+            border-bottom: 2px solid #00f0ff;
             box-sizing: border-box;
-            transition: box-shadow 0.3s ease;
+            transition: border-color 0.3s ease, text-shadow 0.3s ease;
+        }
+        input::placeholder {
+            color: rgba(240, 240, 240, 0.5);
+            text-shadow: 0 0 5px rgba(0, 240, 255, 0.3);
         }
         input:focus {
             outline: none;
-            box-shadow: 0 0 10px #64b5f6, 0 0 20px rgba(100, 181, 246, 0.5);
+            border-color: #ff00ff;
+            text-shadow: 0 0 10px rgba(255, 0, 255, 0.5);
         }
         button {
-            padding: 12px;
+            padding: 14px;
             font-size: 16px;
-            margin: 10px 0;
+            margin: 12px 0;
             border: none;
-            background: linear-gradient(45deg, #1976d2, #64b5f6);
-            color: #ffffff;
+            background: linear-gradient(45deg, #00f0ff, #ff00ff);
+            color: #0a0a0a;
+            font-weight: 700;
             width: 100%;
-            border-radius: 8px;
+            border-radius: 10px;
             cursor: pointer;
             transition: transform 0.2s ease, box-shadow 0.2s ease;
+            animation: pulseButton 2s infinite;
         }
         button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 15px rgba(100, 181, 246, 0.5);
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(0, 240, 255, 0.5);
         }
         button:active {
             transform: translateY(0);
-            box-shadow: 0 2px 8px rgba(100, 181, 246, 0.3);
+            box-shadow: 0 3px 10px rgba(0, 240, 255, 0.3);
+        }
+        @keyframes pulseButton {
+            0%, 100% { filter: brightness(1); }
+            50% { filter: brightness(1.2); }
         }
         .toggle-link {
-            color: #81c784;
+            color: #00ff88;
             text-decoration: none;
             cursor: pointer;
-            margin-top: 15px;
+            margin-top: 20px;
             font-size: 14px;
-            transition: color 0.3s ease;
+            transition: color 0.3s ease, text-shadow 0.3s ease;
         }
         .toggle-link:hover {
-            color: #a5d6a7;
-            text-decoration: underline;
+            color: #33ffaa;
+            text-shadow: 0 0 10px rgba(0, 255, 136, 0.7);
         }
         #failureMessage {
             font-size: 18px;
-            color: #ef5350;
+            color: #ff0044;
             display: none;
             padding: 20px;
-            background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(10px);
+            background: linear-gradient(145deg, rgba(10, 10, 10, 0.9), rgba(30, 30, 30, 0.8));
             border-radius: 12px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+            box-shadow: 0 0 20px rgba(255, 0, 68, 0.3);
             position: relative;
             z-index: 10;
             text-align: center;
             width: 100%;
-            max-width: 400px;
+            max-width: 420px;
         }
         #userEmail {
             font-size: 18px;
-            margin-bottom: 15px;
+            margin-bottom: 20px;
+            color: #00f0ff;
+            text-shadow: 0 0 10px rgba(0, 240, 255, 0.5);
         }
         #feedback {
-            margin-top: 10px;
+            margin-top: 15px;
             font-size: 16px;
-            color: #81c784;
+            color: #00ff88;
             display: none;
+            text-shadow: 0 0 10px rgba(0, 255, 136, 0.5);
         }
         #countdown {
             display: none;
             margin: 15px 0;
             font-size: 18px;
-            color: #e0e0e0;
+            color: #f0f0f0;
             text-align: center;
-            background: rgba(129, 199, 132, 0.1);
-            padding: 10px;
-            border-radius: 8px;
-            box-shadow: 0 0 15px rgba(129, 199, 132, 0.3);
-            animation: pulse 2s infinite ease-in-out;
+            background: linear-gradient(45deg, rgba(0, 240, 255, 0.2), rgba(255, 0, 255, 0.2));
+            padding: 12px;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0, 240, 255, 0.4);
+            animation: neonPulse 1.5s infinite ease-in-out;
         }
-        @keyframes pulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.02); }
+        @keyframes neonPulse {
+            0%, 100% { transform: scale(1); opacity: 0.8; }
+            50% { transform: scale(1.03); opacity: 1; }
         }
         #countdown span {
-            font-weight: bold;
-            color: #81c784;
-            text-shadow: 0 0 5px rgba(129, 199, 132, 0.5);
+            font-weight: 700;
+            color: #00ff88;
+            text-shadow: 0 0 10px rgba(0, 255, 136, 0.7);
         }
         #savePopup {
             display: none;
             position: fixed;
             top: 50%;
             left: 50%;
-            transform: translate(-50%, -50%);
-            background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(10px);
-            padding: 20px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+            transform: translate(-50%, -50%) scale(0);
+            background: linear-gradient(145deg, rgba(10, 10, 10, 0.9), rgba(30, 30, 30, 0.8));
+            padding: 30px;
+            box-shadow: 0 0 30px rgba(0, 240, 255, 0.5);
             text-align: center;
             width: 100%;
-            max-width: 400px;
-            border-radius: 12px;
+            max-width: 420px;
+            border-radius: 15px;
             z-index: 1000;
+            animation: popupScale 0.3s ease-out forwards;
+        }
+        @keyframes popupScale {
+            to { transform: translate(-50%, -50%) scale(1); }
         }
         #savePopup p {
-            margin: 0 0 15px;
+            margin: 0 0 20px;
             font-size: 16px;
-            color: #e0e0e0;
+            color: #f0f0f0;
+            text-shadow: 0 0 5px rgba(0, 240, 255, 0.3);
         }
         #savePopup button {
             display: inline-block;
@@ -197,39 +257,41 @@
             margin: 10px 2.5%;
         }
         #savePopup #yesBtn {
-            background: linear-gradient(45deg, #ffffff, #e0e0e0);
-            color: #333333;
+            background: linear-gradient(45deg, #00f0ff, #00ff88);
+            color: #0a0a0a;
         }
         #savePopup #yesBtn:hover {
-            background: linear-gradient(45deg, #e0e0e0, #ffffff);
+            background: linear-gradient(45deg, #00ff88, #00f0ff);
         }
         #savePopup #noBtn {
-            background: linear-gradient(45deg, #808080, #666666);
+            background: linear-gradient(45deg, #ff0044, #ff00ff);
+            color: #0a0a0a;
         }
         #savePopup #noBtn:hover {
-            background: linear-gradient(45deg, #666666, #808080);
+            background: linear-gradient(45deg, #ff00ff, #ff0044);
         }
     </style>
 </head>
 <body>
+    <div class="particles"></div>
     <div class="bg-text">
         <span>D</span><span>A</span><span>V</span><span>U</span><span>N</span>
     </div>
-    <div id="authSection">
-        <h3 id="authTitle">Login</h3>
+    <div id="authSection" class="active">
+        <h3 id="authTitle">Sync Save</h3>
         <input type="email" id="email" placeholder="Enter your email">
         <input type="password" id="password" placeholder="Enter your password">
-        <div id="countdown">Registration closes in: <span id="timer"></span></div>
-        <button id="authBtn">Login</button>
-        <span class="toggle-link" id="toggleAuth">Don't have an account? Register</span>
+        <div id="countdown">Sync registration closes in: <span id="timer"></span></div>
+        <button id="authBtn">Sync Save</button>
+        <span class="toggle-link" id="toggleAuth">New to FC25? Register</span>
     </div>
     <div id="saveSection">
         <span id="userEmail"></span>
-        <span id="feedback">Saved!</span>
+        <span id="feedback">Synced!</span>
     </div>
-    <div id="failureMessage">Save Failed</div>
+    <div id="failureMessage">Sync Failed</div>
     <div id="savePopup">
-        <p>Do you want to save your progress?</p>
+        <p>Sync your FC25 progress now?</p>
         <button id="yesBtn">Yes</button>
         <button id="noBtn">No</button>
     </div>
@@ -240,7 +302,7 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
 
     <script>
-        console.log("Script started");
+        console.log("Davun’s FC25 Save UI 🚀");
 
         const firebaseConfig = {
             apiKey: "AIzaSyAYF88RuhWLgKXUC1nePFOLdBv3WS-nYNY",
@@ -254,16 +316,16 @@
 
         try {
             firebase.initializeApp(firebaseConfig);
-            console.log("Firebase initialized");
+            console.log("Firebase locked in 🔒");
         } catch (error) {
-            console.error("Firebase initialization failed:", error);
+            console.error("Firebase error:", error);
         }
 
         const auth = firebase.auth();
         const db = firebase.firestore();
 
-        document.addEventListener("DOMContentLoaded", function() {
-            console.log("DOM fully loaded");
+        document.addEventListener("DOMContentLoaded", () => {
+            console.log("DOM ready, let’s roll 🎮");
 
             const authBtn = document.getElementById("authBtn");
             const authTitle = document.getElementById("authTitle");
@@ -282,15 +344,15 @@
             const noBtn = document.getElementById("noBtn");
 
             if (!authSection || !saveSection || !savePopup) {
-                console.error("Critical elements missing:", { authSection, saveSection, savePopup });
+                console.error("Elements missing:", { authSection, saveSection, savePopup });
                 return;
             }
 
             let isRegisterMode = false;
             let extension = window.location.search ? decodeURIComponent(window.location.search.substring(1)) : "";
-            console.log("Raw URI extension:", extension);
+            console.log("URI extension:", extension);
 
-            // Countdown Timer Logic
+            // Countdown Timer
             const deadline = new Date("2025-05-19T23:59:59Z").getTime();
             function updateTimer() {
                 const now = new Date().getTime();
@@ -300,9 +362,9 @@
                     toggleAuth.style.display = "none";
                     if (isRegisterMode) {
                         isRegisterMode = false;
-                        authTitle.textContent = "Login";
-                        authBtn.textContent = "Login";
-                        console.log("Registration period ended, switching to login");
+                        authTitle.textContent = "Sync Save";
+                        authBtn.textContent = "Sync Save";
+                        console.log("Registration closed, back to login");
                     }
                     return false;
                 }
@@ -342,7 +404,7 @@
                 const url = window.URL.createObjectURL(blob);
                 const a = document.createElement("a");
                 a.href = url;
-                a.download = `savecode_${Date.now()}.txt`;
+                a.download = `fc25_save_${Date.now()}.txt`;
                 document.body.appendChild(a);
                 a.click();
                 document.body.removeChild(a);
@@ -350,22 +412,22 @@
             }
 
             function showSaveSection(user) {
-                console.log("Showing save section for user:", user.email);
+                console.log("Syncing save for:", user.email);
                 authSection.classList.remove("active");
                 authSection.classList.add("inactive");
                 setTimeout(() => {
                     authSection.style.display = "none";
                     saveSection.style.display = "flex";
                     failureMessage.style.display = "none";
-                    userEmailSpan.textContent = `Logged in as: ${user.email}`;
+                    userEmailSpan.textContent = `Synced as: ${user.email}`;
                     savePopup.style.display = "block";
                 }, 300);
             }
 
             function attemptAutoAuth() {
-                console.log("Attempting auto-auth with email:", urlEmail);
+                console.log("Trying auto-sync with email:", urlEmail);
                 if (!urlEmail || !urlPassword) {
-                    console.log("No URL credentials, showing auth section");
+                    console.log("No URL credentials, showing sync form");
                     authSection.style.display = "flex";
                     authSection.classList.add("active");
                     saveSection.style.display = "none";
@@ -375,11 +437,11 @@
 
                 auth.signInWithEmailAndPassword(urlEmail, urlPassword)
                     .then(userCredential => {
-                        console.log("Auto-login successful");
+                        console.log("Auto-sync successful");
                         showSaveSection(userCredential.user);
                     })
                     .catch(err => {
-                        console.error("Auto-login failed:", err.message);
+                        console.error("Auto-sync failed:", err.message);
                         authSection.style.display = "flex";
                         authSection.classList.add("active");
                         saveSection.style.display = "none";
@@ -388,7 +450,7 @@
             }
 
             auth.onAuthStateChanged(user => {
-                console.log("Auth state changed, user:", user ? user.email : "none");
+                console.log("Auth state:", user ? user.email : "none");
                 if (user) {
                     showSaveSection(user);
                 } else {
@@ -396,8 +458,8 @@
                 }
             });
 
-            toggleAuth.addEventListener("click", function() {
-                console.log("Toggle auth clicked, current mode:", isRegisterMode);
+            toggleAuth.addEventListener("click", () => {
+                console.log("Toggle clicked, mode:", isRegisterMode);
                 if (!isRegistrationOpen && !isRegisterMode) {
                     alert("Registration period has ended.");
                     return;
@@ -406,14 +468,14 @@
                 authSection.classList.remove("active");
                 setTimeout(() => {
                     if (isRegisterMode) {
-                        authTitle.textContent = "Register";
-                        authBtn.textContent = "Register";
-                        toggleAuth.textContent = "Already have an account? Login";
+                        authTitle.textContent = "Register Save";
+                        authBtn.textContent = "Register Save";
+                        toggleAuth.textContent = "Got an account? Sync Save";
                         countdown.style.display = "block";
                     } else {
-                        authTitle.textContent = "Login";
-                        authBtn.textContent = "Login";
-                        toggleAuth.textContent = "Don't have an account? Register";
+                        authTitle.textContent = "Sync Save";
+                        authBtn.textContent = "Sync Save";
+                        toggleAuth.textContent = "New to FC25? Register";
                         countdown.style.display = "none";
                     }
                     authSection.classList.add("active");
@@ -422,12 +484,12 @@
                 }, 300);
             });
 
-            authBtn.addEventListener("click", function() {
-                console.log("Auth button clicked, mode:", isRegisterMode ? "register" : "login");
+            authBtn.addEventListener("click", () => {
+                console.log("Auth clicked, mode:", isRegisterMode ? "register" : "sync");
                 const email = emailInput.value.trim();
                 const password = passwordInput.value.trim();
                 if (!email || !password) {
-                    alert("Please enter both email and password.");
+                    alert("Enter both email and password to proceed.");
                     return;
                 }
 
@@ -438,7 +500,7 @@
                     }
                     auth.createUserWithEmailAndPassword(email, password)
                         .then(userCredential => {
-                            console.log("Registration successful");
+                            console.log("Registration synced");
                             showSaveSection(userCredential.user);
                         })
                         .catch(err => {
@@ -450,20 +512,20 @@
                 } else {
                     auth.signInWithEmailAndPassword(email, password)
                         .then(userCredential => {
-                            console.log("Login successful");
+                            console.log("Sync successful");
                             showSaveSection(userCredential.user);
                         })
                         .catch(err => {
-                            console.error("Login failed:", err.message);
-                            alert("Failed to sign in: " + err.message);
+                            console.error("Sync failed:", err.message);
+                            alert("Failed to sync: " + err.message);
                             failureMessage.style.display = "block";
                             authSection.style.display = "none";
                         });
                 }
             });
 
-            yesBtn.addEventListener("click", function() {
-                console.log("Yes button clicked");
+            yesBtn.addEventListener("click", () => {
+                console.log("Yes clicked");
                 const user = auth.currentUser;
                 if (user) {
                     const codeToSave = cleanedExtension || "No code provided";
@@ -472,7 +534,7 @@
                         timestamp: firebase.firestore.FieldValue.serverTimestamp()
                     })
                     .then(() => {
-                        console.log("Save successful");
+                        console.log("Save synced");
                         feedback.style.display = "block";
                         savePopup.style.display = "none";
                         setTimeout(() => feedback.style.display = "none", 2000);
@@ -480,21 +542,21 @@
                     })
                     .catch(err => {
                         console.error("Save failed:", err.message);
-                        alert("Failed to save: " + err.message);
+                        alert("Failed to sync: " + err.message);
                         savePopup.style.display = "none";
                     });
                 }
             });
 
-            noBtn.addEventListener("click", function() {
-                console.log("No button clicked");
+            noBtn.addEventListener("click", () => {
+                console.log("No clicked");
                 savePopup.style.display = "none";
             });
 
-            // Initial display
+            // Kick it off
             authSection.style.display = "flex";
             authSection.classList.add("active");
-            console.log("Initial display set to authSection");
+            console.log("Sync UI live 🌌");
         });
     </script>
 </body>
