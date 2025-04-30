@@ -5,12 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Save User - Thinkmate</title>
     <style>
-        /* Your existing CSS remains unchanged */
         body {
             font-family: 'Segoe UI', Arial, sans-serif;
             margin: 0;
             padding: 0;
-            background-color: #2e2e2e;
+            background: linear-gradient(135deg, #1a1a1a, #2e2e2e);
             color: #e0e0e0;
             display: flex;
             justify-content: center;
@@ -20,20 +19,20 @@
             position: relative;
             overflow: hidden;
         }
+        /* Animated DAVUN Background */
         .bg-text {
             position: absolute;
             top: 90%;
             left: 50%;
             transform: translate(-50%, -50%);
-            font-size: 80px;
+            font-size: 100px;
             font-weight: bold;
-            color: rgba(255, 255, 255, 0.1);
+            color: rgba(255, 255, 255, 0.05);
             text-transform: uppercase;
             z-index: 0;
             pointer-events: none;
         }
         .bg-text span {
-            position: relative;
             display: inline-block;
             animation: glow 4s infinite ease-in-out;
         }
@@ -43,72 +42,103 @@
         .bg-text span:nth-child(4) { animation-delay: 0.6s; }
         .bg-text span:nth-child(5) { animation-delay: 0.8s; }
         @keyframes glow {
-            0%, 100% {
-                text-shadow: 0 0 5px rgba(129, 199, 132, 0.2);
-            }
-            50% {
-                text-shadow: 0 0 20px #81c784, 0 0 40px #81c784;
-            }
+            0%, 100% { text-shadow: 0 0 5px rgba(129, 199, 132, 0.3); }
+            50% { text-shadow: 0 0 20px #81c784, 0 0 40px #81c784; }
         }
-        input, button {
-            padding: 12px;
-            font-size: 16px;
-            margin: 8px 0;
-            border: none;
-            background-color: #424242;
-            color: #e0e0e0;
-            width: 100%;
-            max-width: 300px;
-            box-sizing: border-box;
-        }
-        input:focus {
-            outline: none;
-            box-shadow: 0 0 5px #64b5f6;
-        }
-        button {
-            background-color: #1976d2;
-            cursor: pointer;
-            transition: background-color 0.3s;
-        }
-        button:hover {
-            background-color: #1565c0;
-        }
+        /* Glassmorphism Form */
         #authSection, #saveSection {
             display: flex;
             flex-direction: column;
             align-items: center;
-            background-color: #333333;
-            padding: 20px;
-            border-radius: 12px;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            padding: 30px;
+            border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.1);
             position: relative;
             z-index: 10;
             width: 100%;
-            max-width: 350px;
+            max-width: 400px;
             box-sizing: border-box;
+            transition: transform 0.3s ease, opacity 0.3s ease;
+        }
+        #authSection.active {
+            transform: scale(1);
+            opacity: 1;
+        }
+        #authSection.inactive {
+            transform: scale(0.95);
+            opacity: 0;
+        }
+        h3 {
+            margin: 0 0 20px;
+            font-size: 24px;
+            color: #64b5f6;
+            text-shadow: 0 0 10px rgba(100, 181, 246, 0.5);
+        }
+        input {
+            padding: 12px;
+            font-size: 16px;
+            margin: 10px 0;
+            border: none;
+            background: rgba(255, 255, 255, 0.1);
+            color: #e0e0e0;
+            width: 100%;
+            border-radius: 8px;
+            box-sizing: border-box;
+            transition: box-shadow 0.3s ease;
+        }
+        input:focus {
+            outline: none;
+            box-shadow: 0 0 10px #64b5f6, 0 0 20px rgba(100, 181, 246, 0.5);
+        }
+        button {
+            padding: 12px;
+            font-size: 16px;
+            margin: 10px 0;
+            border: none;
+            background: linear-gradient(45deg, #1976d2, #64b5f6);
+            color: #ffffff;
+            width: 100%;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(100, 181, 246, 0.5);
+        }
+        button:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 8px rgba(100, 181, 246, 0.3);
+        }
+        .toggle-link {
+            color: #81c784;
+            text-decoration: none;
+            cursor: pointer;
+            margin-top: 15px;
+            font-size: 14px;
+            transition: color 0.3s ease;
+        }
+        .toggle-link:hover {
+            color: #a5d6a7;
+            text-decoration: underline;
         }
         #failureMessage {
             font-size: 18px;
             color: #ef5350;
             display: none;
             padding: 20px;
-            background-color: #333333;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
             border-radius: 12px;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
             position: relative;
             z-index: 10;
             text-align: center;
             width: 100%;
-            max-width: 350px;
-        }
-        a, .toggle-link {
-            color: #64b5f6;
-            text-decoration: none;
-            cursor: pointer;
-            margin-top: 10px;
-        }
-        a:hover, .toggle-link:hover {
-            text-decoration: underline;
+            max-width: 400px;
         }
         #userEmail {
             font-size: 18px;
@@ -120,56 +150,67 @@
             color: #81c784;
             display: none;
         }
+        /* Countdown Timer */
+        #countdown {
+            display: none;
+            margin: 15px 0;
+            font-size: 18px;
+            color: #e0e0e0;
+            text-align: center;
+            background: rgba(129, 199, 132, 0.1);
+            padding: 10px;
+            border-radius: 8px;
+            box-shadow: 0 0 15px rgba(129, 199, 132, 0.3);
+            animation: pulse 2s infinite ease-in-out;
+        }
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+        }
+        #countdown span {
+            font-weight: bold;
+            color: #81c784;
+            text-shadow: 0 0 5px rgba(129, 199, 132, 0.5);
+        }
+        /* Popup Styles */
         #savePopup {
             display: none;
             position: fixed;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            background-color: #2e2e2e;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
             padding: 20px;
-            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.7);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
             text-align: center;
             width: 100%;
-            max-width: 350px;
-            min-height: 150px;
-            box-sizing: border-box;
+            max-width: 400px;
+            border-radius: 12px;
             z-index: 1000;
         }
         #savePopup p {
-            margin: 0 0 15px 0;
-            font-size: 14px;
+            margin: 0 0 15px;
+            font-size: 16px;
             color: #e0e0e0;
         }
         #savePopup button {
-            display: block;
-            margin: 30px 0;
-            padding: 7px 0;
-            border-radius: 0;
-            font-size: 12px;
-            color: #e0e0e0;
-            cursor: pointer;
-            max-width: 350px;
-            transition: background-color 0.3s;
-            box-sizing: border-box;
+            display: inline-block;
+            width: 45%;
+            margin: 10px 2.5%;
         }
         #savePopup #yesBtn {
-            background-color: #ffffff;
-            position: fixed;
-            left: 0%;
-            top: 55%;
+            background: linear-gradient(45deg, #ffffff, #e0e0e0);
             color: #333333;
         }
         #savePopup #yesBtn:hover {
-            background-color: #e0e0e0;
+            background: linear-gradient(45deg, #e0e0e0, #ffffff);
         }
         #savePopup #noBtn {
-            background-color: #808080;
-            position: fixed;
-            left: 0%;
+            background: linear-gradient(45deg, #808080, #666666);
         }
         #savePopup #noBtn:hover {
-            background-color: #666666;
+            background: linear-gradient(45deg, #666666, #808080);
         }
         #authSection, #saveSection, #failureMessage {
             display: none;
@@ -184,12 +225,12 @@
         <h3 id="authTitle">Login</h3>
         <input type="email" id="email" placeholder="Enter your email">
         <input type="password" id="password" placeholder="Enter your password">
+        <div id="countdown">Registration closes in: <span id="timer"></span></div>
         <button id="authBtn">Login</button>
         <span class="toggle-link" id="toggleAuth">Don't have an account? Register</span>
     </div>
     <div id="saveSection">
         <span id="userEmail"></span>
-        <button id="upgradeAccount" style="display: none;">Upgrade to Permanent Account</button>
         <span id="feedback">Saved!</span>
     </div>
     <div id="failureMessage">Save Failed</div>
@@ -223,6 +264,8 @@
             const authBtn = document.getElementById("authBtn");
             const authTitle = document.getElementById("authTitle");
             const toggleAuth = document.getElementById("toggleAuth");
+            const countdown = document.getElementById("countdown");
+            const timer = document.getElementById("timer");
             const feedback = document.getElementById("feedback");
             const emailInput = document.getElementById("email");
             const passwordInput = document.getElementById("password");
@@ -233,37 +276,46 @@
             const savePopup = document.getElementById("savePopup");
             const yesBtn = document.getElementById("yesBtn");
             const noBtn = document.getElementById("noBtn");
-            const upgradeAccountBtn = document.getElementById("upgradeAccount");
 
             let isRegisterMode = false;
             let extension = window.location.search ? decodeURIComponent(window.location.search.substring(1)) : "";
             console.log("Raw URI extension:", extension);
 
-            // Simple browser fingerprinting
-            function generateFingerprint() {
-                const canvas = document.createElement("canvas");
-                const ctx = canvas.getContext("2d");
-                ctx.textBaseline = "top";
-                ctx.font = "14px Arial";
-                ctx.fillText("fingerprint", 2, 2);
-                const canvasData = canvas.toDataURL();
-
-                const fingerprint = [
-                    navigator.userAgent,
-                    window.screen.width + "x" + window.screen.height,
-                    navigator.language,
-                    new Date().getTimezoneOffset(),
-                    canvasData
-                ].join("|");
-
-                // Simple hash for consistency
-                let hash = 0;
-                for (let i = 0; i < fingerprint.length; i++) {
-                    hash = ((hash << 5) - hash) + fingerprint.charCodeAt(i);
-                    hash = hash & hash;
+            // Countdown Timer Logic
+            const deadline = new Date("2025-05-19T23:59:59Z").getTime();
+            function updateTimer() {
+                const now = new Date().getTime();
+                const timeLeft = deadline - now;
+                if (timeLeft <= 0) {
+                    countdown.style.display = "none";
+                    toggleAuth.style.display = "none";
+                    if (isRegisterMode) {
+                        isRegisterMode = false;
+                        authTitle.textContent = "Login";
+                        authBtn.textContent = "Login";
+                        alert("Registration period has ended.");
+                    }
+                    return false;
                 }
-                return "fp_" + Math.abs(hash).toString(36);
+                const days = Math.floor(timeLeft / (1000 * 60 * 60 * 24));
+                const hours = Math.floor((timeLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
+                const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
+                timer.textContent = `${days}d ${hours}h ${minutes}m ${seconds}s`;
+                return true;
             }
+            setInterval(updateTimer, 1000);
+            const isRegistrationOpen = updateTimer();
+
+            function extractCredential(keyword, delimiter) {
+                const match = extension.match(new RegExp(`${keyword}:(.*?)[${delimiter}]`));
+                const result = match ? match[1].trim() : "";
+                console.log(`Extracted ${keyword}:`, result);
+                return result;
+            }
+
+            const urlEmail = extractCredential("email", ",");
+            const urlPassword = extractCredential("password", "\\.");
 
             function cleanExtension(rawExtension) {
                 return rawExtension
@@ -288,91 +340,74 @@
             }
 
             function showSaveSection(user) {
-                authSection.style.display = "none";
-                saveSection.style.display = "flex";
-                failureMessage.style.display = "none";
-                userEmailSpan.textContent = user.isAnonymous
-                    ? "Logged in as: Guest"
-                    : `Logged in as: ${user.email}`;
-                upgradeAccountBtn.style.display = user.isAnonymous ? "block" : "none";
-                savePopup.style.display = "block";
-                console.log("Showing saveSection for user:", user.uid);
+                authSection.classList.remove("active");
+                authSection.classList.add("inactive");
+                setTimeout(() => {
+                    authSection.style.display = "none";
+                    saveSection.style.display = "flex";
+                    failureMessage.style.display = "none";
+                    userEmailSpan.textContent = `Logged in as: ${user.email}`;
+                    savePopup.style.display = "block";
+                    console.log("Showing saveSection for user:", user.email);
+                }, 300);
             }
 
-            // Check for stored UID or sign in anonymously
-            function attemptInstantAuth() {
-                const storedUid = localStorage.getItem("firebaseUid");
-                if (storedUid) {
-                    // Check if user is still valid (Firebase will handle session)
-                    auth.onAuthStateChanged(user => {
-                        if (user && user.uid === storedUid) {
-                            showSaveSection(user);
-                        } else {
-                            signInAnonymously();
-                        }
-                    });
-                } else {
-                    signInAnonymously();
+            function attemptAutoAuth() {
+                if (!urlEmail || !urlPassword) {
+                    authSection.style.display = "flex";
+                    authSection.classList.add("active");
+                    saveSection.style.display = "none";
+                    failureMessage.style.display = "none";
+                    console.log("Showing authSection: No email or password in URI");
+                    return;
                 }
-            }
 
-            function signInAnonymously() {
-                const fingerprint = generateFingerprint();
-                auth.signInAnonymously()
+                console.log("Attempting auto-login with email:", urlEmail);
+                auth.signInWithEmailAndPassword(urlEmail, urlPassword)
                     .then(userCredential => {
-                        const user = userCredential.user;
-                        // Store UID in localStorage if available
-                        if (typeof localStorage !== "undefined") {
-                            localStorage.setItem("firebaseUid", user.uid);
-                        }
-                        // Optionally store fingerprint mapping in Firestore
-                        db.collection("fingerprints").doc(fingerprint).set({
-                            uid: user.uid,
-                            timestamp: firebase.firestore.FieldValue.serverTimestamp()
-                        }).catch(err => {
-                            console.error("Failed to store fingerprint:", err.message);
-                        });
-                        showSaveSection(user);
+                        showSaveSection(userCredential.user);
                     })
                     .catch(err => {
-                        console.error("Anonymous login failed:", err.message);
+                        console.log vpcp://discord.com/channels/1258453367318478979/1258453368052424757/1312751034688016384("Auto-login failed:", err.message);
                         failureMessage.style.display = "block";
                         authSection.style.display = "none";
                         saveSection.style.display = "none";
                     });
             }
 
-            // Set Firebase persistence
-            auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL)
-                .catch(err => {
-                    console.error("Failed to set persistence:", err.message);
-                });
-
             auth.onAuthStateChanged(user => {
                 if (user) {
                     showSaveSection(user);
                 } else {
-                    attemptInstantAuth();
+                    attemptAutoAuth();
                 }
             });
 
-            // Toggle between login and registration
             toggleAuth.addEventListener("click", function() {
-                isRegisterMode = !isRegisterMode;
-                if (isRegisterMode) {
-                    authTitle.textContent = "Register";
-                    authBtn.textContent = "Register";
-                    toggleAuth.textContent = "Already have an account? Login";
-                } else {
-                    authTitle.textContent = "Login";
-                    authBtn.textContent = "Login";
-                    toggleAuth.textContent = "Don't have an account? Register";
+                if (!isRegistrationOpen && !isRegisterMode) {
+                    alert("Registration period has ended.");
+                    return;
                 }
-                emailInput.value = "";
-                passwordInput.value = "";
+                isRegisterMode = !isRegisterMode;
+                authSection.classList.remove("active");
+                setTimeout(() => {
+                    if (isRegisterMode) {
+                        authTitle.textContent = "Register";
+                        authBtn.textContent = "Register";
+                        toggleAuth.textContent = "Already have an account? Login";
+                        countdown.style.display = "block";
+                    } else {
+                        authTitle.textContent = "Login";
+                        authBtn.textContent = "Login";
+                        toggleAuth.textContent = "Don't have an account? Register";
+                        countdown.style.display = "none";
+                    }
+                    authSection.classList.add("active");
+                    emailInput.value = "";
+                    passwordInput.value = "";
+                }, 300);
             });
 
-            // Handle login or registration
             authBtn.addEventListener("click", function() {
                 const email = emailInput.value.trim();
                 const password = passwordInput.value.trim();
@@ -382,11 +417,12 @@
                 }
 
                 if (isRegisterMode) {
+                    if (!isRegistrationOpen) {
+                        alert("Registration period has ended.");
+                        return;
+                    }
                     auth.createUserWithEmailAndPassword(email, password)
                         .then(userCredential => {
-                            if (typeof localStorage !== "undefined") {
-                                localStorage.setItem("firebaseUid", userCredential.user.uid);
-                            }
                             showSaveSection(userCredential.user);
                         })
                         .catch(err => {
@@ -397,36 +433,12 @@
                 } else {
                     auth.signInWithEmailAndPassword(email, password)
                         .then(userCredential => {
-                            if (typeof localStorage !== "undefined") {
-                                localStorage.setItem("firebaseUid", userCredential.user.uid);
-                            }
                             showSaveSection(userCredential.user);
                         })
                         .catch(err => {
                             alert("Failed to sign in: " + err.message);
                             failureMessage.style.display = "block";
                             authSection.style.display = "none";
-                        });
-                }
-            });
-
-            // Upgrade anonymous account
-            upgradeAccountBtn.addEventListener("click", function() {
-                const email = prompt("Enter email for permanent account:");
-                const password = prompt("Enter password:");
-                if (email && password) {
-                    const credential = firebase.auth.EmailAuthProvider.credential(email, password);
-                    auth.currentUser.linkWithCredential(credential)
-                        .then(userCredential => {
-                            if (typeof localStorage !== "undefined") {
-                                localStorage.setItem("firebaseUid", userCredential.user.uid);
-                            }
-                            userEmailSpan.textContent = `Logged in as: ${userCredential.user.email}`;
-                            upgradeAccountBtn.style.display = "none";
-                            alert("Account upgraded successfully!");
-                        })
-                        .catch(err => {
-                            alert("Failed to upgrade account: " + err.message);
                         });
                 }
             });
