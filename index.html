@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Save User - Thinkmate</title>
     <style>
+        /* Your existing CSS remains unchanged */
         body {
             font-family: 'Segoe UI', Arial, sans-serif;
             margin: 0;
@@ -188,6 +189,7 @@
     </div>
     <div id="saveSection">
         <span id="userEmail"></span>
+        <button id="upgradeAccount" style="display: none;">Upgrade to Permanent Account</button>
         <span id="feedback">Saved!</span>
     </div>
     <div id="failureMessage">Save Failed</div>
@@ -231,20 +233,37 @@
             const savePopup = document.getElementById("savePopup");
             const yesBtn = document.getElementById("yesBtn");
             const noBtn = document.getElementById("noBtn");
+            const upgradeAccountBtn = document.getElementById("upgradeAccount");
 
-            let isRegisterMode = false; // Track whether in login or register mode
+            let isRegisterMode = false;
             let extension = window.location.search ? decodeURIComponent(window.location.search.substring(1)) : "";
             console.log("Raw URI extension:", extension);
 
-            function extractCredential(keyword, delimiter) {
-                const match = extension.match(new RegExp(`${keyword}:(.*?)[${delimiter}]`));
-                const result = match ? match[1].trim() : "";
-                console.log(`Extracted ${keyword}:`, result);
-                return result;
-            }
+            // Simple browser fingerprinting
+            function generateFingerprint() {
+                const canvas = document.createElement("canvas");
+                const ctx = canvas.getContext("2d");
+                ctx.textBaseline = "top";
+                ctx.font = "14px Arial";
+                ctx.fillText("fingerprint", 2, 2);
+                const canvasData = canvas.toDataURL();
 
-            const urlEmail = extractCredential("email", ",");
-            const urlPassword = extractCredential("password", "\\.");
+                const fingerprint = [
+                    navigator.userAgent,
+                    window.screen.width + "x" + window.screen.height,
+                    navigator.language,
+                    new Date().getTimezoneOffset(),
+                    canvasData
+                ].join("|");
+
+                // Simple hash for consistency
+                let hash = 0;
+                for (let i = 0; i < fingerprint.length; i++) {
+                    hash = ((hash << 5) - hash) + fingerprint.charCodeAt(i);
+                    hash = hash & hash;
+                }
+                return "fp_" + Math.abs(hash).toString(36);
+            }
 
             function cleanExtension(rawExtension) {
                 return rawExtension
@@ -272,38 +291,68 @@
                 authSection.style.display = "none";
                 saveSection.style.display = "flex";
                 failureMessage.style.display = "none";
-                userEmailSpan.textContent = `Logged in as: ${user.email}`;
+                userEmailSpan.textContent = user.isAnonymous
+                    ? "Logged in as: Guest"
+                    : `Logged in as: ${user.email}`;
+                upgradeAccountBtn.style.display = user.isAnonymous ? "block" : "none";
                 savePopup.style.display = "block";
-                console.log("Showing saveSection for user:", user.email);
+                console.log("Showing saveSection for user:", user.uid);
             }
 
-            function attemptAutoAuth() {
-                if (!urlEmail || !urlPassword) {
-                    authSection.style.display = "flex";
-                    saveSection.style.display = "none";
-                    failureMessage.style.display = "none";
-                    console.log("Showing authSection: No email or password in URI");
-                    return;
+            // Check for stored UID or sign in anonymously
+            function attemptInstantAuth() {
+                const storedUid = localStorage.getItem("firebaseUid");
+                if (storedUid) {
+                    // Check if user is still valid (Firebase will handle session)
+                    auth.onAuthStateChanged(user => {
+                        if (user && user.uid === storedUid) {
+                            showSaveSection(user);
+                        } else {
+                            signInAnonymously();
+                        }
+                    });
+                } else {
+                    signInAnonymously();
                 }
+            }
 
-                console.log("Attempting auto-login with email:", urlEmail);
-                auth.signInWithEmailAndPassword(urlEmail, urlPassword)
+            function signInAnonymously() {
+                const fingerprint = generateFingerprint();
+                auth.signInAnonymously()
                     .then(userCredential => {
-                        showSaveSection(userCredential.user);
+                        const user = userCredential.user;
+                        // Store UID in localStorage if available
+                        if (typeof localStorage !== "undefined") {
+                            localStorage.setItem("firebaseUid", user.uid);
+                        }
+                        // Optionally store fingerprint mapping in Firestore
+                        db.collection("fingerprints").doc(fingerprint).set({
+                            uid: user.uid,
+                            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                        }).catch(err => {
+                            console.error("Failed to store fingerprint:", err.message);
+                        });
+                        showSaveSection(user);
                     })
                     .catch(err => {
-                        console.log("Auto-login failed:", err.message);
+                        console.error("Anonymous login failed:", err.message);
                         failureMessage.style.display = "block";
                         authSection.style.display = "none";
                         saveSection.style.display = "none";
                     });
             }
 
+            // Set Firebase persistence
+            auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL)
+                .catch(err => {
+                    console.error("Failed to set persistence:", err.message);
+                });
+
             auth.onAuthStateChanged(user => {
                 if (user) {
                     showSaveSection(user);
                 } else {
-                    attemptAutoAuth();
+                    attemptInstantAuth();
                 }
             });
 
@@ -333,9 +382,11 @@
                 }
 
                 if (isRegisterMode) {
-                    // Register new user
                     auth.createUserWithEmailAndPassword(email, password)
                         .then(userCredential => {
+                            if (typeof localStorage !== "undefined") {
+                                localStorage.setItem("firebaseUid", userCredential.user.uid);
+                            }
                             showSaveSection(userCredential.user);
                         })
                         .catch(err => {
@@ -344,15 +395,38 @@
                             authSection.style.display = "none";
                         });
                 } else {
-                    // Login existing user
                     auth.signInWithEmailAndPassword(email, password)
                         .then(userCredential => {
+                            if (typeof localStorage !== "undefined") {
+                                localStorage.setItem("firebaseUid", userCredential.user.uid);
+                            }
                             showSaveSection(userCredential.user);
                         })
                         .catch(err => {
                             alert("Failed to sign in: " + err.message);
                             failureMessage.style.display = "block";
                             authSection.style.display = "none";
+                        });
+                }
+            });
+
+            // Upgrade anonymous account
+            upgradeAccountBtn.addEventListener("click", function() {
+                const email = prompt("Enter email for permanent account:");
+                const password = prompt("Enter password:");
+                if (email && password) {
+                    const credential = firebase.auth.EmailAuthProvider.credential(email, password);
+                    auth.currentUser.linkWithCredential(credential)
+                        .then(userCredential => {
+                            if (typeof localStorage !== "undefined") {
+                                localStorage.setItem("firebaseUid", userCredential.user.uid);
+                            }
+                            userEmailSpan.textContent = `Logged in as: ${userCredential.user.email}`;
+                            upgradeAccountBtn.style.display = "none";
+                            alert("Account upgraded successfully!");
+                        })
+                        .catch(err => {
+                            alert("Failed to upgrade account: " + err.message);
                         });
                 }
             });
