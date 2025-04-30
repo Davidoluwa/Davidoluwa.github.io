@@ -4,14 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FC25 Mobile Save - Davun</title>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
     <style>
         body {
-            font-family: 'Orbitron', sans-serif;
+            font-family: 'Segoe UI', Arial, sans-serif;
             margin: 0;
             padding: 0;
-            background: linear-gradient(135deg, #1e1e1e, #2e2e2e);
-            color: #f5e8c7;
+            background-color: #2e2e2e;
+            color: #e0e0e0;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -20,217 +19,177 @@
             position: relative;
             overflow: hidden;
         }
-        /* Background Text */
         .bg-text {
             position: absolute;
-            top: 85%;
+            top: 90%;
             left: 50%;
             transform: translate(-50%, -50%);
-            font-size: 100px;
-            font-weight: 700;
-            color: rgba(245, 232, 199, 0.1);
+            font-size: 80px;
+            font-weight: bold;
+            color: rgba(255, 255, 255, 0.1);
             text-transform: uppercase;
             z-index: 0;
             pointer-events: none;
         }
         .bg-text span {
+            position: relative;
             display: inline-block;
-            animation: softGlow 4s infinite ease-in-out;
+            animation: glow 4s infinite ease-in-out;
         }
         .bg-text span:nth-child(1) { animation-delay: 0s; }
-        .bg-text span:nth-child(2) { animation-delay: 0.3s; }
-        .bg-text span:nth-child(3) { animation-delay: 0.6s; }
-        .bg-text span:nth-child(4) { animation-delay: 0.9s; }
-        .bg-text span:nth-child(5) { animation-delay: 1.2s; }
-        @keyframes softGlow {
-            0%, 100% { text-shadow: 0 0 5px rgba(74, 112, 67, 0.3); }
-            50% { text-shadow: 0 0 15px rgba(74, 112, 67, 0.5); }
+        .bg-text span:nth-child(2) { animation-delay: 0.2s; }
+        .bg-text span:nth-child(3) { animation-delay: 0.4s; }
+        .bg-text span:nth-child(4) { animation-delay: 0.6s; }
+        .bg-text span:nth-child(5) { animation-delay: 0.8s; }
+        @keyframes glow {
+            0%, 100% {
+                text-shadow: 0 0 5px rgba(129, 199, 132, 0.2);
+            }
+            50% {
+                text-shadow: 0 0 20px #81c784, 0 0 40px #81c784;
+            }
         }
-        /* Form Design */
-        #authSection, #saveSection {
-            display: none;
-            flex-direction: column;
-            align-items: center;
-            background: #2e2e2e;
-            padding: 40px;
-            border-radius: 16px;
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
-            border: 1px solid #f5e8c7;
-            position: relative;
-            z-index: 10;
-            width: 100%;
-            max-width: 400px;
-            box-sizing: border-box;
-            animation: fadeIn 0.6s ease-out;
-        }
-        #authSection.active {
-            display: flex;
-            transform: scale(1);
-            opacity: 1;
-        }
-        #authSection.inactive {
-            transform: scale(0.95);
-            opacity: 0;
-        }
-        @keyframes fadeIn {
-            from { transform: translateY(20px); opacity: 0; }
-            to { transform: translateY(0); opacity: 1; }
-        }
-        h3 {
-            margin: 0 0 20px;
-            font-size: 24px;
-            font-weight: 700;
-            color: #f5e8c7;
-            text-shadow: 0 0 8px rgba(74, 112, 67, 0.3);
-        }
-        input {
+        input, button {
             padding: 12px;
             font-size: 16px;
-            margin: 10px 0;
+            margin: 8px 0;
             border: none;
-            background: transparent;
-            color: #f5e8c7;
+            background-color: #424242;
+            color: #e0e0e0;
             width: 100%;
-            border-bottom: 2px solid #4a7043;
+            max-width: 300px;
             box-sizing: border-box;
-            transition: border-color 0.3s ease, text-shadow 0.3s ease;
-        }
-        input::placeholder {
-            color: rgba(245, 232, 199, 0.6);
         }
         input:focus {
             outline: none;
-            border-color: #f5e8c7;
-            text-shadow: 0 0 8px rgba(245, 232, 199, 0.5);
+            box-shadow: 0 0 5px #64b5f6;
         }
         button {
-            padding: 12px;
-            font-size: 16px;
-            margin: 10px 0;
-            border: none;
-            background: #4a7043;
-            color: #f5e8c7;
-            font-weight: 400;
-            width: 100%;
-            border-radius: 8px;
+            background-color: #1976d2;
             cursor: pointer;
-            transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.3s ease;
+            transition: background-color 0.3s;
         }
         button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(74, 112, 67, 0.5);
-            background: #5a8a50;
+            background-color: #1565c0;
         }
-        button:active {
-            transform: translateY(0);
-            box-shadow: 0 2px 6px rgba(74, 112, 67, 0.3);
-        }
-        .toggle-link {
-            color: #f5e8c7;
-            text-decoration: none;
-            cursor: pointer;
-            margin-top: 15px;
-            font-size: 14px;
-            transition: text-shadow 0.3s ease;
-        }
-        .toggle-link:hover {
-            text-shadow: 0 0 8px rgba(245, 232, 199, 0.5);
+        #authSection, #saveSection {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: #333333;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+            position: relative;
+            z-index: 10;
+            width: 100%;
+            max-width: 350px;
+            box-sizing: border-box;
         }
         #failureMessage {
             font-size: 18px;
-            color: #f5e8c7;
+            color: #ef5350;
             display: none;
             padding: 20px;
-            background: #2e2e2e;
+            background-color: #333333;
             border-radius: 12px;
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
-            border: 1px solid #f5e8c7;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
             position: relative;
             z-index: 10;
             text-align: center;
             width: 100%;
-            max-width: 400px;
+            max-width: 350px;
+        }
+        a, .toggle-link {
+            color: #64b5f6;
+            text-decoration: none;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        a:hover, .toggle-link:hover {
+            text-decoration: underline;
         }
         #userEmail {
             font-size: 18px;
             margin-bottom: 15px;
-            color: #f5e8c7;
-            text-shadow: 0 0 5px rgba(74, 112, 67, 0.3);
         }
         #feedback {
             margin-top: 10px;
             font-size: 16px;
-            color: #f5e8c7;
+            color: #81c784;
             display: none;
-            text-shadow: 0 0 5px rgba(74, 112, 67, 0.3);
-        }
-        #countdown {
-            display: none;
-            margin: 15px 0;
-            font-size: 16px;
-            color: #e0e0e0;
-            text-align: center;
-            background: #2e2e2e;
-            padding: 10px;
-            border-radius: 8px;
-            border: 1px solid #4a7043;
-            box-shadow: 0 0 10px rgba(74, 112, 67, 0.3);
-            animation: gentlePulse 2s infinite ease-in-out;
-        }
-        @keyframes gentlePulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.02); }
-        }
-        #countdown span {
-            font-weight: 700;
-            color: #e0e0e0;
-            text-shadow: 0 0 5px rgba(74, 112, 67, 0.3);
         }
         #savePopup {
             display: none;
             position: fixed;
             top: 50%;
             left: 50%;
-            transform: translate(-50%, -50%) scale(0);
-            background: #2e2e2e;
-            padding: 30px;
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
-            border: 1px solid #f5e8c7;
+            transform: translate(-50%, -50%);
+            background-color: #2e2e2e;
+            padding: 20px;
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.7);
             text-align: center;
             width: 100%;
-            max-width: 400px;
-            border-radius: 12px;
+            max-width: 350px;
+            min-height: 150px;
+            box-sizing: border-box;
             z-index: 1000;
-            animation: popupFade 0.4s ease-out forwards;
-        }
-        @keyframes popupFade {
-            to { transform: translate(-50%, -50%) scale(1); }
         }
         #savePopup p {
-            margin: 0 0 15px;
-            font-size: 16px;
-            color: #f5e8c7;
-            text-shadow: 0 0 5px rgba(74, 112, 67, 0.3);
+            margin: 0 0 15px 0;
+            font-size: 14px;
+            color: #e0e0e0;
         }
         #savePopup button {
-            display: inline-block;
-            width: 45%;
-            margin: 10px 2.5%;
+            display: block;
+            margin: 30px 0;
+            padding: 7px 0;
+            border-radius: 0;
+            font-size: 12px;
+            color: #e0e0e0;
+            cursor: pointer;
+            max-width: 350px;
+            transition: background-color 0.3s;
+            box-sizing: border-box;
         }
         #savePopup #yesBtn {
-            background: #4a7043;
-            color: #f5e8c7;
+            background-color: #ffffff;
+            position: fixed;
+            left: 0%;
+            top: 55%;
+            color: #333333;
         }
         #savePopup #yesBtn:hover {
-            background: #5a8a50;
+            background-color: #e0e0e0;
         }
         #savePopup #noBtn {
-            background: #2e2e2e;
-            color: #f5e8c7;
-            border: 1px solid #f5e8c7;
+            background-color: #808080;
+            position: fixed;
+            left: 0%;
         }
         #savePopup #noBtn:hover {
-            background: #3a3a3a;
+            background-color: #666666;
+        }
+        #countdown {
+            display: none;
+            margin: 10px 0;
+            font-size: 16px;
+            color: #e0e0e0;
+            text-align: center;
+            background-color: #333333;
+            padding: 10px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(129, 199, 132, 0.3);
+            width: 100%;
+            max-width: 300px;
+            box-sizing: border-box;
+        }
+        #countdown span {
+            font-weight: bold;
+            color: #81c784;
+        }
+        #authSection, #saveSection, #failureMessage {
+            display: none;
         }
     </style>
 </head>
@@ -238,21 +197,21 @@
     <div class="bg-text">
         <span>D</span><span>A</span><span>V</span><span>U</span><span>N</span>
     </div>
-    <div id="authSection" class="active">
+    <div id="authSection">
         <h3 id="authTitle">Sync Save</h3>
         <input type="email" id="email" placeholder="Enter your email">
         <input type="password" id="password" placeholder="Enter your password">
-        <div id="countdown">Sync registration closes in: <span id="timer"></span></div>
+        <div id="countdown">Registration closes in: <span id="timer"></span></div>
         <button id="authBtn">Sync Save</button>
         <span class="toggle-link" id="toggleAuth">New to FC25? Register</span>
     </div>
     <div id="saveSection">
         <span id="userEmail"></span>
-        <span id="feedback">Synced!</span>
+        <span id="feedback">Saved!</span>
     </div>
-    <div id="failureMessage">Sync Failed</div>
+    <div id="failureMessage">Save Failed</div>
     <div id="savePopup">
-        <p>Sync your FC25 progress now?</p>
+        <p>Do you want to save your progress?</p>
         <button id="yesBtn">Yes</button>
         <button id="noBtn">No</button>
     </div>
@@ -285,7 +244,7 @@
         const auth = firebase.auth();
         const db = firebase.firestore();
 
-        document.addEventListener("DOMContentLoaded", () => {
+        document.addEventListener("DOMContentLoaded", function() {
             console.log("DOM loaded, ready to sync 🎮");
 
             const authBtn = document.getElementById("authBtn");
@@ -311,9 +270,9 @@
 
             let isRegisterMode = false;
             let extension = window.location.search ? decodeURIComponent(window.location.search.substring(1)) : "";
-            console.log("URI extension:", extension);
+            console.log("Raw URI extension:", extension);
 
-            // Countdown Timer
+            // Countdown Timer Logic
             const deadline = new Date("2025-05-19T23:59:59Z").getTime();
             function updateTimer() {
                 const now = new Date().getTime();
@@ -325,7 +284,7 @@
                         isRegisterMode = false;
                         authTitle.textContent = "Sync Save";
                         authBtn.textContent = "Sync Save";
-                        console.log("Registration closed, back to login");
+                        console.log("Registration period ended, switching to login");
                     }
                     return false;
                 }
@@ -373,24 +332,19 @@
             }
 
             function showSaveSection(user) {
-                console.log("Syncing save for:", user.email);
-                authSection.classList.remove("active");
-                authSection.classList.add("inactive");
-                setTimeout(() => {
-                    authSection.style.display = "none";
-                    saveSection.style.display = "flex";
-                    failureMessage.style.display = "none";
-                    userEmailSpan.textContent = `Synced as: ${user.email}`;
-                    savePopup.style.display = "block";
-                }, 300);
+                console.log("Showing save section for user:", user.email);
+                authSection.style.display = "none";
+                saveSection.style.display = "flex";
+                failureMessage.style.display = "none";
+                userEmailSpan.textContent = `Synced as: ${user.email}`;
+                savePopup.style.display = "block";
             }
 
             function attemptAutoAuth() {
-                console.log("Trying auto-sync with email:", urlEmail);
+                console.log("Attempting auto-sync with email:", urlEmail);
                 if (!urlEmail || !urlPassword) {
-                    console.log("No URL credentials, showing sync form");
+                    console.log("No URL credentials, showing auth section");
                     authSection.style.display = "flex";
-                    authSection.classList.add("active");
                     saveSection.style.display = "none";
                     failureMessage.style.display = "none";
                     return;
@@ -404,7 +358,6 @@
                     .catch(err => {
                         console.error("Auto-sync failed:", err.message);
                         authSection.style.display = "flex";
-                        authSection.classList.add("active");
                         saveSection.style.display = "none";
                         failureMessage.style.display = "block";
                     });
@@ -419,38 +372,34 @@
                 }
             });
 
-            toggleAuth.addEventListener("click", () => {
-                console.log("Toggle clicked, mode:", isRegisterMode);
+            toggleAuth.addEventListener("click", function() {
+                console.log("Toggle auth clicked, current mode:", isRegisterMode);
                 if (!isRegistrationOpen && !isRegisterMode) {
                     alert("Registration period has ended.");
                     return;
                 }
                 isRegisterMode = !isRegisterMode;
-                authSection.classList.remove("active");
-                setTimeout(() => {
-                    if (isRegisterMode) {
-                        authTitle.textContent = "Register Save";
-                        authBtn.textContent = "Register Save";
-                        toggleAuth.textContent = "Got an account? Sync Save";
-                        countdown.style.display = "block";
-                    } else {
-                        authTitle.textContent = "Sync Save";
-                        authBtn.textContent = "Sync Save";
-                        toggleAuth.textContent = "New to FC25? Register";
-                        countdown.style.display = "none";
-                    }
-                    authSection.classList.add("active");
-                    emailInput.value = "";
-                    passwordInput.value = "";
-                }, 300);
+                if (isRegisterMode) {
+                    authTitle.textContent = "Register Save";
+                    authBtn.textContent = "Register Save";
+                    toggleAuth.textContent = "Got an account? Sync Save";
+                    countdown.style.display = "block";
+                } else {
+                    authTitle.textContent = "Sync Save";
+                    authBtn.textContent = "Sync Save";
+                    toggleAuth.textContent = "New to FC25? Register";
+                    countdown.style.display = "none";
+                }
+                emailInput.value = "";
+                passwordInput.value = "";
             });
 
-            authBtn.addEventListener("click", () => {
-                console.log("Auth clicked, mode:", isRegisterMode ? "register" : "sync");
+            authBtn.addEventListener("click", function() {
+                console.log("Auth button clicked, mode:", isRegisterMode ? "register" : "sync");
                 const email = emailInput.value.trim();
                 const password = passwordInput.value.trim();
                 if (!email || !password) {
-                    alert("Enter both email and password to proceed.");
+                    alert("Please enter both email and password.");
                     return;
                 }
 
@@ -485,8 +434,8 @@
                 }
             });
 
-            yesBtn.addEventListener("click", () => {
-                console.log("Yes clicked");
+            yesBtn.addEventListener("click", function() {
+                console.log("Yes button clicked");
                 const user = auth.currentUser;
                 if (user) {
                     const codeToSave = cleanedExtension || "No code provided";
@@ -509,15 +458,14 @@
                 }
             });
 
-            noBtn.addEventListener("click", () => {
-                console.log("No clicked");
+            noBtn.addEventListener("click", function() {
+                console.log("No button clicked");
                 savePopup.style.display = "none";
             });
 
-            // Kick it off
+            // Initial display
             authSection.style.display = "flex";
-            authSection.classList.add("active");
-            console.log("Sync UI live 🍃");
+            console.log("Sync UI live 🟢");
         });
     </script>
 </body>
