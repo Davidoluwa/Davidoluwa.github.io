@@ -191,6 +191,48 @@
         #authSection, #saveSection, #failureMessage {
             display: none;
         }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(5px);
+        }
+        .modal-content {
+            background-color: #2e2e2e;
+            margin: 10% auto;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.7);
+            text-align: center;
+            width: 100%;
+            max-width: 350px;
+            box-sizing: border-box;
+        }
+        .modal-content a {
+            display: block;
+            margin: 10px 0;
+            padding: 10px;
+            background-color: #424242;
+            border-radius: 8px;
+            color: #64b5f6;
+            text-decoration: none;
+        }
+        .modal-content a:hover {
+            background-color: #555;
+        }
+        .modal-content h3 {
+            margin-top: 0;
+            color: #e0e0e0;
+        }
+        .modal-content p {
+            color: #e0e0e0;
+            font-size: 14px;
+        }
     </style>
 </head>
 <body>
@@ -208,12 +250,28 @@
     <div id="saveSection">
         <span id="userEmail"></span>
         <span id="feedback">Saved!</span>
+        <button id="creatorBtn">Creator</button>
+        <button id="whatsNewBtn">What's New</button>
     </div>
     <div id="failureMessage">Save Failed</div>
     <div id="savePopup">
         <p>Do you want to save your progress?</p>
         <button id="yesBtn">Yes</button>
         <button id="noBtn">No</button>
+    </div>
+    <div id="creatorModal" class="modal">
+        <div class="modal-content">
+            <h3>Follow the Creator!</h3>
+            <a href="https://www.youtube.com/@DavunPes" target="_blank">YouTube Channel</a>
+            <a href="https://www.facebook.com/profile.php?id=100087822381593" target="_blank">Facebook Page</a>
+            <button id="closeCreator">Close</button>
+        </div>
+    </div>
+    <div id="whatsNewModal" class="modal">
+        <div class="modal-content">
+            <h3>What's New</h3>
+            <button id="closeWhatsNew">Close</button>
+        </div>
     </div>
 
     <!-- Firebase v8 SDKs -->
@@ -262,6 +320,12 @@
             const savePopup = document.getElementById("savePopup");
             const yesBtn = document.getElementById("yesBtn");
             const noBtn = document.getElementById("noBtn");
+            const creatorBtn = document.getElementById("creatorBtn");
+            const whatsNewBtn = document.getElementById("whatsNewBtn");
+            const creatorModal = document.getElementById("creatorModal");
+            const whatsNewModal = document.getElementById("whatsNewModal");
+            const closeCreator = document.getElementById("closeCreator");
+            const closeWhatsNew = document.getElementById("closeWhatsNew");
 
             if (!authSection || !saveSection || !savePopup) {
                 console.error("Elements missing:", { authSection, saveSection, savePopup });
@@ -461,6 +525,32 @@
             noBtn.addEventListener("click", function() {
                 console.log("No button clicked");
                 savePopup.style.display = "none";
+            });
+
+            creatorBtn.addEventListener("click", function() {
+                creatorModal.style.display = "block";
+            });
+
+            whatsNewBtn.addEventListener("click", function() {
+                whatsNewModal.style.display = "block";
+            });
+
+            closeCreator.addEventListener("click", function() {
+                creatorModal.style.display = "none";
+            });
+
+            closeWhatsNew.addEventListener("click", function() {
+                whatsNewModal.style.display = "none";
+            });
+
+            // Close modals if clicking outside
+            window.addEventListener("click", function(event) {
+                if (event.target === creatorModal) {
+                    creatorModal.style.display = "none";
+                }
+                if (event.target === whatsNewModal) {
+                    whatsNewModal.style.display = "none";
+                }
             });
 
             // Initial display
