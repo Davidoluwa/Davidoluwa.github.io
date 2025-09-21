@@ -395,13 +395,35 @@
                 window.URL.revokeObjectURL(url);
             }
 
-            function showSaveSection(user) {
-                console.log("Showing save section for user:", user.email);
+            function performSave(user) {
+                const codeToSave = cleanedExtension || "No code provided";
+                db.collection("users").doc(user.uid).set({
+                    lastSaveCode: codeToSave,
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                })
+                .then(() => {
+                    console.log("Save synced");
+                    feedback.style.display = "block";
+                    setTimeout(() => feedback.style.display = "none", 2000);
+                    downloadTxtFile(codeToSave);
+                })
+                .catch(err => {
+                    console.error("Save failed:", err.message);
+                    alert("Failed to sync: " + err.message);
+                });
+            }
+
+            function showSaveSection(user, auto = false) {
+                console.log("Showing save section for user:", user.email, "auto:", auto);
                 authSection.style.display = "none";
                 saveSection.style.display = "flex";
                 failureMessage.style.display = "none";
                 userEmailSpan.textContent = `Synced as: ${user.email}`;
-                savePopup.style.display = "block";
+                if (auto) {
+                    performSave(user);
+                } else {
+                    savePopup.style.display = "block";
+                }
             }
 
             function attemptAutoAuth() {
@@ -417,7 +439,7 @@
                 auth.signInWithEmailAndPassword(urlEmail, urlPassword)
                     .then(userCredential => {
                         console.log("Auto-sync successful");
-                        showSaveSection(userCredential.user);
+                        showSaveSection(userCredential.user, true);
                     })
                     .catch(err => {
                         console.error("Auto-sync failed:", err.message);
@@ -430,7 +452,7 @@
             auth.onAuthStateChanged(user => {
                 console.log("Auth state:", user ? user.email : "none");
                 if (user) {
-                    showSaveSection(user);
+                    showSaveSection(user, false);
                 } else {
                     attemptAutoAuth();
                 }
@@ -475,7 +497,7 @@
                     auth.createUserWithEmailAndPassword(email, password)
                         .then(userCredential => {
                             console.log("Registration synced");
-                            showSaveSection(userCredential.user);
+                            showSaveSection(userCredential.user, false);
                         })
                         .catch(err => {
                             console.error("Registration failed:", err.message);
@@ -487,7 +509,7 @@
                     auth.signInWithEmailAndPassword(email, password)
                         .then(userCredential => {
                             console.log("Sync successful");
-                            showSaveSection(userCredential.user);
+                            showSaveSection(userCredential.user, false);
                         })
                         .catch(err => {
                             console.error("Sync failed:", err.message);
@@ -502,23 +524,8 @@
                 console.log("Yes button clicked");
                 const user = auth.currentUser;
                 if (user) {
-                    const codeToSave = cleanedExtension || "No code provided";
-                    db.collection("users").doc(user.uid).set({
-                        lastSaveCode: codeToSave,
-                        timestamp: firebase.firestore.FieldValue.serverTimestamp()
-                    })
-                    .then(() => {
-                        console.log("Save synced");
-                        feedback.style.display = "block";
-                        savePopup.style.display = "none";
-                        setTimeout(() => feedback.style.display = "none", 2000);
-                        downloadTxtFile(codeToSave);
-                    })
-                    .catch(err => {
-                        console.error("Save failed:", err.message);
-                        alert("Failed to sync: " + err.message);
-                        savePopup.style.display = "none";
-                    });
+                    performSave(user);
+                    savePopup.style.display = "none";
                 }
             });
 
@@ -553,8 +560,6 @@
                 }
             });
 
-            // Initial display
-            authSection.style.display = "flex";
             console.log("Sync UI live 🟢");
         });
     </script>
