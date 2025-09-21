@@ -333,8 +333,12 @@
             }
 
             let isRegisterMode = false;
+            let isFreshLogin = false;
             let extension = window.location.search ? decodeURIComponent(window.location.search.substring(1)) : "";
             console.log("Raw URI extension:", extension);
+
+            const localEmail = localStorage.getItem('savedEmail');
+            const localPassword = localStorage.getItem('savedPassword');
 
             // Countdown Timer Logic
             const deadline = new Date("2025-05-19T23:59:59Z").getTime();
@@ -400,39 +404,81 @@
                 authSection.style.display = "none";
                 saveSection.style.display = "flex";
                 failureMessage.style.display = "none";
-                userEmailSpan.textContent = `Synced as: ${user.email}`;
-                savePopup.style.display = "block";
-            }
-
-            function attemptAutoAuth() {
-                console.log("Attempting auto-sync with email:", urlEmail);
-                if (!urlEmail || !urlPassword) {
-                    console.log("No URL credentials, showing auth section");
-                    authSection.style.display = "flex";
-                    saveSection.style.display = "none";
-                    failureMessage.style.display = "none";
-                    return;
+                if (isFreshLogin) {
+                    userEmailSpan.textContent = `Synced as: ${user.email}`;
+                    isFreshLogin = false;
+                } else {
+                    userEmailSpan.textContent = `Continuing as: ${user.email}`;
                 }
-
-                auth.signInWithEmailAndPassword(urlEmail, urlPassword)
-                    .then(userCredential => {
-                        console.log("Auto-sync successful");
-                        showSaveSection(userCredential.user);
-                    })
-                    .catch(err => {
-                        console.error("Auto-sync failed:", err.message);
-                        authSection.style.display = "flex";
-                        saveSection.style.display = "none";
-                        failureMessage.style.display = "block";
-                    });
+                savePopup.style.display = "block";
             }
 
             auth.onAuthStateChanged(user => {
                 console.log("Auth state:", user ? user.email : "none");
                 if (user) {
+                    isFreshLogin = false;
                     showSaveSection(user);
                 } else {
-                    attemptAutoAuth();
+                    // Try localStorage first
+                    if (localEmail && localPassword) {
+                        isFreshLogin = false;
+                        console.log("Attempting auto-sync from localStorage with email:", localEmail);
+                        auth.signInWithEmailAndPassword(localEmail, localPassword)
+                            .then(userCredential => {
+                                console.log("Auto-sync from local successful");
+                                localStorage.setItem('savedEmail', localEmail);
+                                localStorage.setItem('savedPassword', localPassword);
+                                showSaveSection(userCredential.user);
+                            })
+                            .catch(err => {
+                                console.error("Local auto-sync failed:", err.message);
+                                localStorage.removeItem('savedEmail');
+                                localStorage.removeItem('savedPassword');
+                                // Fall back to URL
+                                if (urlEmail && urlPassword) {
+                                    isFreshLogin = false;
+                                    console.log("Attempting auto-sync from URL with email:", urlEmail);
+                                    auth.signInWithEmailAndPassword(urlEmail, urlPassword)
+                                        .then(userCredential => {
+                                            console.log("Auto-sync from URL successful");
+                                            localStorage.setItem('savedEmail', urlEmail);
+                                            localStorage.setItem('savedPassword', urlPassword);
+                                            showSaveSection(userCredential.user);
+                                        })
+                                        .catch(err => {
+                                            console.error("URL auto-sync failed:", err.message);
+                                            authSection.style.display = "flex";
+                                            saveSection.style.display = "none";
+                                            failureMessage.style.display = "none";
+                                        });
+                                } else {
+                                    authSection.style.display = "flex";
+                                    saveSection.style.display = "none";
+                                    failureMessage.style.display = "none";
+                                }
+                            });
+                    } else if (urlEmail && urlPassword) {
+                        isFreshLogin = false;
+                        console.log("Attempting auto-sync from URL with email:", urlEmail);
+                        auth.signInWithEmailAndPassword(urlEmail, urlPassword)
+                            .then(userCredential => {
+                                console.log("Auto-sync from URL successful");
+                                localStorage.setItem('savedEmail', urlEmail);
+                                localStorage.setItem('savedPassword', urlPassword);
+                                showSaveSection(userCredential.user);
+                            })
+                            .catch(err => {
+                                console.error("URL auto-sync failed:", err.message);
+                                authSection.style.display = "flex";
+                                saveSection.style.display = "none";
+                                failureMessage.style.display = "none";
+                            });
+                    } else {
+                        console.log("No credentials, showing auth section");
+                        authSection.style.display = "flex";
+                        saveSection.style.display = "none";
+                        failureMessage.style.display = "none";
+                    }
                 }
             });
 
@@ -467,6 +513,8 @@
                     return;
                 }
 
+                isFreshLogin = true;
+
                 if (isRegisterMode) {
                     if (!isRegistrationOpen) {
                         alert("Registration period has ended.");
@@ -475,11 +523,14 @@
                     auth.createUserWithEmailAndPassword(email, password)
                         .then(userCredential => {
                             console.log("Registration synced");
+                            localStorage.setItem('savedEmail', email);
+                            localStorage.setItem('savedPassword', password);
                             showSaveSection(userCredential.user);
                         })
                         .catch(err => {
                             console.error("Registration failed:", err.message);
                             alert("Failed to register: " + err.message);
+                            isFreshLogin = false;
                             failureMessage.style.display = "block";
                             authSection.style.display = "none";
                         });
@@ -487,11 +538,14 @@
                     auth.signInWithEmailAndPassword(email, password)
                         .then(userCredential => {
                             console.log("Sync successful");
+                            localStorage.setItem('savedEmail', email);
+                            localStorage.setItem('savedPassword', password);
                             showSaveSection(userCredential.user);
                         })
                         .catch(err => {
                             console.error("Sync failed:", err.message);
                             alert("Failed to sync: " + err.message);
+                            isFreshLogin = false;
                             failureMessage.style.display = "block";
                             authSection.style.display = "none";
                         });
