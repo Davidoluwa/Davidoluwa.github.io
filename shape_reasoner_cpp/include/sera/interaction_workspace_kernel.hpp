@@ -15,15 +15,25 @@ struct WorkspaceKernelConfig {
     std::uint32_t channels{16};
     std::uint32_t shared_rank{6};
     std::uint32_t reasoning_steps{14};
-    // Readout convention. false: answer bit p is read from the single lattice
-    // cell (p, 0). true: it is read from a learned pool over the whole of row
-    // p, which puts cell (p, p) -- the only cell holding both a_p and b_p --
-    // within reach of bit p without any routing.
+    // Which lattice sites answer bit p is read from.
     //
-    // This is not an arithmetic cue. A row sum is sum_j f(a_p, b_j); the
-    // partial-product sum multiplication needs is the *anti*-diagonal
-    // sum_{i+j=p} a_i b_j, which the stencil must still learn to route.
-    bool row_pooled_readout{true};
+    // The stencil is translation-equivariant, so it can only perform uniform
+    // shifts, and that makes the choice of readout site structural rather
+    // than cosmetic. Two sites are canonical under uniform shifts:
+    //
+    //   corner (p, 0)   -- the anti-diagonal i + j = p terminates here, and
+    //                      the uniform shift (i+1, j-1) sweeps that whole
+    //                      anti-diagonal into it;
+    //   diagonal (p, p) -- the only cell observing both a_p and b_p, reached
+    //                      from (p-1, p-1) by the uniform shift (+1, +1).
+    //
+    // No single site serves both roles, which is what the width-12 ablation
+    // showed: corner readout learned multiplication and failed addition.
+    // `kDual` supplies both sites and lets the model weight them; it is not
+    // an arithmetic cue, since which site matters for which operator, and how
+    // to accumulate into it, still has to be learned.
+    enum class Readout : std::uint8_t { kCorner = 0, kRowPool = 1, kDual = 2 };
+    Readout readout{Readout::kDual};
 };
 
 struct WorkspaceTelemetry {

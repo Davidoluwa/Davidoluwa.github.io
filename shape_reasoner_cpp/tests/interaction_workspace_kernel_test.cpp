@@ -51,9 +51,9 @@ const std::vector<sera::ArithmeticTrainingCase>& sample_batch() {
 // Central finite differences against the analytic gradient. This is the only
 // guard that the hand-written backward pass through the gated stencil,
 // the shared projection, and the anchor tap is actually correct.
-void check_gradient(bool row_pooled_readout) {
+void check_gradient(sera::WorkspaceKernelConfig::Readout readout) {
     auto config = small_config();
-    config.row_pooled_readout = row_pooled_readout;
+    config.readout = readout;
     sera::InteractionWorkspaceKernel kernel(config, 0x9E3779B97F4A7C15ULL);
     const auto analytic = kernel.flat_gradient(sample_batch());
     auto values = kernel.flat_parameters();
@@ -93,9 +93,8 @@ void check_gradient(bool row_pooled_readout) {
         worst = std::max(worst, relative);
     }
 
-    std::cout << "worst relative gradient error ("
-              << (row_pooled_readout ? "row-pooled" : "corner")
-              << " readout): " << worst << "\n";
+    std::cout << "worst relative gradient error (readout "
+              << static_cast<int>(readout) << "): " << worst << "\n";
     require(
         worst < 5.0e-3,
         "Analytic gradient disagrees with finite differences"
@@ -245,8 +244,9 @@ void check_structured_pruning() {
 
 int main() {
     try {
-        check_gradient(true);
-        check_gradient(false);
+        check_gradient(sera::WorkspaceKernelConfig::Readout::kCorner);
+        check_gradient(sera::WorkspaceKernelConfig::Readout::kRowPool);
+        check_gradient(sera::WorkspaceKernelConfig::Readout::kDual);
         check_structured_pruning();
         check_determinism_and_learning();
         check_bit_width_guard();

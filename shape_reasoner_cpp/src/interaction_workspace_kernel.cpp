@@ -28,7 +28,7 @@ constexpr float kAdamBeta1 = 0.9F;
 constexpr float kAdamBeta2 = 0.999F;
 constexpr float kAdamEpsilon = 1.0e-8F;
 constexpr std::uint64_t kCheckpointMagic = 0x5345524135574B52ULL;
-constexpr std::uint32_t kCheckpointVersion = 2;
+constexpr std::uint32_t kCheckpointVersion = 3;
 
 void validate_config(const WorkspaceKernelConfig& config) {
     if (
@@ -130,20 +130,21 @@ struct InteractionWorkspaceKernel::Parameters {
     std::vector<float> candidate_bias; // channels
     std::vector<float> update;         // kTaps x channels x shared_rank
     std::vector<float> update_bias;    // channels
-    std::vector<float> output;         // channels
+    std::vector<float> output;         // channels, corner site (p, 0)
+    std::vector<float> output_diagonal;// channels, diagonal site (p, p)
     std::vector<float> output_bias;    // 1
 
     [[nodiscard]] std::vector<std::vector<float>*> tensors() {
         return {
             &input, &input_bias, &projection, &candidate, &candidate_bias,
-            &update, &update_bias, &output, &output_bias
+            &update, &update_bias, &output, &output_diagonal, &output_bias
         };
     }
 
     [[nodiscard]] std::vector<const std::vector<float>*> tensors() const {
         return {
             &input, &input_bias, &projection, &candidate, &candidate_bias,
-            &update, &update_bias, &output, &output_bias
+            &update, &update_bias, &output, &output_diagonal, &output_bias
         };
     }
 };
@@ -173,6 +174,7 @@ void shape_parameters(
     parameters.update.assign(kTaps * channels * rank, fill);
     parameters.update_bias.assign(channels, fill);
     parameters.output.assign(channels, fill);
+    parameters.output_diagonal.assign(channels, fill);
     parameters.output_bias.assign(1U, fill);
 }
 
@@ -281,8 +283,10 @@ void forward(
             // Which cells carry which answer bit is a readout convention, not
             // an arithmetic rule.
             const std::size_t row = static_cast<std::size_t>(p) * width;
+            const std::size_t diagonal = row + p;
             float value = parameters.output_bias[0];
-            if (config.row_pooled_readout) {
+            switch (config.readout) {
+            case WorkspaceKernelConfig::Readout::kRowPool:
                 for (std::size_t c = 0; c < channels; ++c) {
                     float pooled = 0.0F;
                     for (std::size_t j = 0; j < width; ++j) {
@@ -290,10 +294,20 @@ void forward(
                     }
                     value += parameters.output[c] * pooled;
                 }
-            } else {
+                break;
+            case WorkspaceKernelConfig::Readout::kDual:
+                for (std::size_t c = 0; c < channels; ++c) {
+                    value += parameters.output[c] * states[row * channels + c]
+                        + parameters.output_diagonal[c]
+                            * states[diagonal * channels + c];
+                }
+                break;
+            case WorkspaceKernelConfig::Readout::kCorner:
+            default:
                 for (std::size_t c = 0; c < channels; ++c) {
                     value += parameters.output[c] * states[row * channels + c];
                 }
+                break;
             }
             cache.logits[step * width + p] = value;
         }
@@ -410,8 +424,10 @@ double backward(
                     * binary_cross_entropy(logit, target);
                 const float delta = weight * (sigmoid(logit) - target);
                 const std::size_t row = static_cast<std::size_t>(p) * width;
+                const std::size_t diagonal = row + p;
                 gradient.output_bias[0] += delta;
-                if (config.row_pooled_readout) {
+                switch (config.readout) {
+                case WorkspaceKernelConfig::Readout::kRowPool:
                     for (std::size_t c = 0; c < channels; ++c) {
                         float pooled = 0.0F;
                         for (std::size_t j = 0; j < width; ++j) {
@@ -421,13 +437,28 @@ double backward(
                         }
                         gradient.output[c] += delta * pooled;
                     }
-                } else {
+                    break;
+                case WorkspaceKernelConfig::Readout::kDual:
+                    for (std::size_t c = 0; c < channels; ++c) {
+                        gradient.output[c] +=
+                            delta * states[row * channels + c];
+                        gradient.output_diagonal[c] +=
+                            delta * states[diagonal * channels + c];
+                        grads[row * channels + c] +=
+                            delta * parameters.output[c];
+                        grads[diagonal * channels + c] +=
+                            delta * parameters.output_diagonal[c];
+                    }
+                    break;
+                case WorkspaceKernelConfig::Readout::kCorner:
+                default:
                     for (std::size_t c = 0; c < channels; ++c) {
                         gradient.output[c] +=
                             delta * states[row * channels + c];
                         grads[row * channels + c] +=
                             delta * parameters.output[c];
                     }
+                    break;
                 }
             }
         }
@@ -986,7 +1017,7 @@ void InteractionWorkspaceKernel::save_checkpoint(
     write_scalar(out, config_.channels);
     write_scalar(out, config_.shared_rank);
     write_scalar(out, config_.reasoning_steps);
-    write_scalar(out, static_cast<std::uint32_t>(config_.row_pooled_readout));
+    write_scalar(out, static_cast<std::uint32_t>(config_.readout));
     write_scalar(out, telemetry_.optimizer_steps);
     write_scalar(out, telemetry_.training_cases);
     for (const auto* tensor : parameters_->tensors()) {
@@ -1011,16 +1042,19 @@ void InteractionWorkspaceKernel::load_checkpoint(const std::string& path) {
     read_scalar(in, config.channels);
     read_scalar(in, config.shared_rank);
     read_scalar(in, config.reasoning_steps);
-    std::uint32_t pooled = 0;
-    read_scalar(in, pooled);
-    config.row_pooled_readout = pooled != 0;
+    std::uint32_t readout = 0;
+    read_scalar(in, readout);
+    if (readout > 2U) {
+        throw std::runtime_error("Unrecognised workspace readout mode");
+    }
+    config.readout = static_cast<WorkspaceKernelConfig::Readout>(readout);
     validate_config(config);
     if (
         config.bit_width != config_.bit_width
         || config.channels != config_.channels
         || config.shared_rank != config_.shared_rank
         || config.reasoning_steps != config_.reasoning_steps
-        || config.row_pooled_readout != config_.row_pooled_readout
+        || config.readout != config_.readout
     ) {
         throw std::runtime_error("Workspace checkpoint shape mismatch");
     }
@@ -1044,8 +1078,8 @@ void InteractionWorkspaceKernel::write_json(std::ostream& out) const {
     out << "  \"channels\": " << config_.channels << ",\n";
     out << "  \"shared_rank\": " << config_.shared_rank << ",\n";
     out << "  \"reasoning_steps\": " << config_.reasoning_steps << ",\n";
-    out << "  \"row_pooled_readout\": "
-        << (config_.row_pooled_readout ? "true" : "false") << ",\n";
+    out << "  \"readout\": "
+        << static_cast<std::uint32_t>(config_.readout) << ",\n";
     out << "  \"parameters\": " << telemetry_.parameters << ",\n";
     out << "  \"cp_equivalent_parameters\": "
         << telemetry_.cp_equivalent_parameters << ",\n";

@@ -268,7 +268,7 @@ int main(int argc, char** argv) {
     if (argc < 6) {
         std::cerr << "usage: " << argv[0]
                   << " <out_dir> <s4|s5> <capacity> <seed> <steps> [bit_width]"
-                     " [corner|rowpool]\n";
+                     " [corner|rowpool|dual]\n";
         return 2;
     }
     try {
@@ -307,13 +307,19 @@ int main(int argc, char** argv) {
             // Routing a value across a W x W lattice with a 3x3 stencil
             // needs on the order of W steps, so the horizon scales with width.
             config.reasoning_steps = 2U * kWidth;
-            // argv[7] selects the readout convention so the two can be
+            // argv[7] selects the readout convention so the variants can be
             // ablated against each other on identical data.
-            config.row_pooled_readout = !(argc >= 8 && std::string(argv[7]) == "corner");
+            const std::string mode = argc >= 8 ? argv[7] : "dual";
+            config.readout =
+                mode == "corner"
+                    ? sera::WorkspaceKernelConfig::Readout::kCorner
+                    : mode == "rowpool"
+                        ? sera::WorkspaceKernelConfig::Readout::kRowPool
+                        : sera::WorkspaceKernelConfig::Readout::kDual;
             sera::InteractionWorkspaceKernel kernel(config, seed);
             const auto label =
                 "w" + std::to_string(kWidth) + "_s5"
-                + (config.row_pooled_readout ? "rowpool" : "corner")
+                + mode
                 + "_channels" + std::to_string(capacity) + "_seed"
                 + std::to_string(seed);
             run(
