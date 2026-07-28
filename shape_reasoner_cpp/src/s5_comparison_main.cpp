@@ -267,7 +267,8 @@ void run(
 int main(int argc, char** argv) {
     if (argc < 6) {
         std::cerr << "usage: " << argv[0]
-                  << " <out_dir> <s4|s5> <capacity> <seed> <steps> [bit_width]\n";
+                  << " <out_dir> <s4|s5> <capacity> <seed> <steps> [bit_width]"
+                     " [corner|rowpool]\n";
         return 2;
     }
     try {
@@ -306,9 +307,14 @@ int main(int argc, char** argv) {
             // Routing a value across a W x W lattice with a 3x3 stencil
             // needs on the order of W steps, so the horizon scales with width.
             config.reasoning_steps = 2U * kWidth;
+            // argv[7] selects the readout convention so the two can be
+            // ablated against each other on identical data.
+            config.row_pooled_readout = !(argc >= 8 && std::string(argv[7]) == "corner");
             sera::InteractionWorkspaceKernel kernel(config, seed);
             const auto label =
-                "w" + std::to_string(kWidth) + "_s5_channels" + std::to_string(capacity) + "_seed"
+                "w" + std::to_string(kWidth) + "_s5"
+                + (config.row_pooled_readout ? "rowpool" : "corner")
+                + "_channels" + std::to_string(capacity) + "_seed"
                 + std::to_string(seed);
             run(
                 kernel, label, kernel.telemetry().parameters, out_dir, seed,

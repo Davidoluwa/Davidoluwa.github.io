@@ -28,7 +28,7 @@ constexpr float kAdamBeta1 = 0.9F;
 constexpr float kAdamBeta2 = 0.999F;
 constexpr float kAdamEpsilon = 1.0e-8F;
 constexpr std::uint64_t kCheckpointMagic = 0x5345524135574B52ULL;
-constexpr std::uint32_t kCheckpointVersion = 1;
+constexpr std::uint32_t kCheckpointVersion = 2;
 
 void validate_config(const WorkspaceKernelConfig& config) {
     if (
@@ -278,14 +278,22 @@ void forward(
     const auto read_out = [&](std::size_t step) {
         const float* states = &cache.states[step * cells * channels];
         for (std::uint32_t p = 0; p < width; ++p) {
-            // Answer bit p is read from lattice row p, column 0. Which cell
-            // carries which bit is a fixed readout convention, not an
-            // arithmetic rule: the stencil must learn to route information
-            // there.
-            const std::size_t cell = static_cast<std::size_t>(p) * width;
+            // Which cells carry which answer bit is a readout convention, not
+            // an arithmetic rule.
+            const std::size_t row = static_cast<std::size_t>(p) * width;
             float value = parameters.output_bias[0];
-            for (std::size_t c = 0; c < channels; ++c) {
-                value += parameters.output[c] * states[cell * channels + c];
+            if (config.row_pooled_readout) {
+                for (std::size_t c = 0; c < channels; ++c) {
+                    float pooled = 0.0F;
+                    for (std::size_t j = 0; j < width; ++j) {
+                        pooled += states[(row + j) * channels + c];
+                    }
+                    value += parameters.output[c] * pooled;
+                }
+            } else {
+                for (std::size_t c = 0; c < channels; ++c) {
+                    value += parameters.output[c] * states[row * channels + c];
+                }
             }
             cache.logits[step * width + p] = value;
         }
@@ -401,13 +409,25 @@ double backward(
                 loss += static_cast<double>(weight)
                     * binary_cross_entropy(logit, target);
                 const float delta = weight * (sigmoid(logit) - target);
-                const std::size_t cell = static_cast<std::size_t>(p) * width;
+                const std::size_t row = static_cast<std::size_t>(p) * width;
                 gradient.output_bias[0] += delta;
-                for (std::size_t c = 0; c < channels; ++c) {
-                    gradient.output[c] +=
-                        delta * states[cell * channels + c];
-                    grads[cell * channels + c] +=
-                        delta * parameters.output[c];
+                if (config.row_pooled_readout) {
+                    for (std::size_t c = 0; c < channels; ++c) {
+                        float pooled = 0.0F;
+                        for (std::size_t j = 0; j < width; ++j) {
+                            pooled += states[(row + j) * channels + c];
+                            grads[(row + j) * channels + c] +=
+                                delta * parameters.output[c];
+                        }
+                        gradient.output[c] += delta * pooled;
+                    }
+                } else {
+                    for (std::size_t c = 0; c < channels; ++c) {
+                        gradient.output[c] +=
+                            delta * states[row * channels + c];
+                        grads[row * channels + c] +=
+                            delta * parameters.output[c];
+                    }
                 }
             }
         }
@@ -966,6 +986,7 @@ void InteractionWorkspaceKernel::save_checkpoint(
     write_scalar(out, config_.channels);
     write_scalar(out, config_.shared_rank);
     write_scalar(out, config_.reasoning_steps);
+    write_scalar(out, static_cast<std::uint32_t>(config_.row_pooled_readout));
     write_scalar(out, telemetry_.optimizer_steps);
     write_scalar(out, telemetry_.training_cases);
     for (const auto* tensor : parameters_->tensors()) {
@@ -990,12 +1011,16 @@ void InteractionWorkspaceKernel::load_checkpoint(const std::string& path) {
     read_scalar(in, config.channels);
     read_scalar(in, config.shared_rank);
     read_scalar(in, config.reasoning_steps);
+    std::uint32_t pooled = 0;
+    read_scalar(in, pooled);
+    config.row_pooled_readout = pooled != 0;
     validate_config(config);
     if (
         config.bit_width != config_.bit_width
         || config.channels != config_.channels
         || config.shared_rank != config_.shared_rank
         || config.reasoning_steps != config_.reasoning_steps
+        || config.row_pooled_readout != config_.row_pooled_readout
     ) {
         throw std::runtime_error("Workspace checkpoint shape mismatch");
     }
@@ -1019,6 +1044,8 @@ void InteractionWorkspaceKernel::write_json(std::ostream& out) const {
     out << "  \"channels\": " << config_.channels << ",\n";
     out << "  \"shared_rank\": " << config_.shared_rank << ",\n";
     out << "  \"reasoning_steps\": " << config_.reasoning_steps << ",\n";
+    out << "  \"row_pooled_readout\": "
+        << (config_.row_pooled_readout ? "true" : "false") << ",\n";
     out << "  \"parameters\": " << telemetry_.parameters << ",\n";
     out << "  \"cp_equivalent_parameters\": "
         << telemetry_.cp_equivalent_parameters << ",\n";

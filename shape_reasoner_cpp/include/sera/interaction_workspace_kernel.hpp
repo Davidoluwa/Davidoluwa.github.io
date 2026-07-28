@@ -15,6 +15,15 @@ struct WorkspaceKernelConfig {
     std::uint32_t channels{16};
     std::uint32_t shared_rank{6};
     std::uint32_t reasoning_steps{14};
+    // Readout convention. false: answer bit p is read from the single lattice
+    // cell (p, 0). true: it is read from a learned pool over the whole of row
+    // p, which puts cell (p, p) -- the only cell holding both a_p and b_p --
+    // within reach of bit p without any routing.
+    //
+    // This is not an arithmetic cue. A row sum is sum_j f(a_p, b_j); the
+    // partial-product sum multiplication needs is the *anti*-diagonal
+    // sum_{i+j=p} a_i b_j, which the stencil must still learn to route.
+    bool row_pooled_readout{true};
 };
 
 struct WorkspaceTelemetry {
