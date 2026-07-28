@@ -96,3 +96,9 @@ target_link_libraries(sera_s5_comparison PRIVATE sera_core)
 target_compile_options(sera_s5_comparison PRIVATE
     $<$<CXX_COMPILER_ID:GNU,Clang>:-O3 -march=native -Wall -Wextra -Wpedantic>
 )
+
+add_executable(sera_s5_proof src/s5_proof_main.cpp)
+target_link_libraries(sera_s5_proof PRIVATE sera_core)
+target_compile_options(sera_s5_proof PRIVATE
+    $<$<CXX_COMPILER_ID:GNU,Clang>:-O3 -march=native -Wall -Wextra -Wpedantic>
+)

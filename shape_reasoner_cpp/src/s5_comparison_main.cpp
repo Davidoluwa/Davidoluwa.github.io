@@ -33,9 +33,16 @@
 
 namespace {
 
-constexpr std::uint32_t kWidth = 6;
-constexpr std::uint32_t kLimit = (1U << kWidth) - 1U;
+// Bit width is a run parameter. It matters: at W = 6 every admissible
+// product is at most 63, which makes multiplication a small table that every
+// configuration memorizes, so W = 6 cannot discriminate architectures. The
+// informative regime is the W = 12 setting where S4 was reported to fail.
+std::uint32_t kWidth = 12;
+std::uint32_t kLimit = (1U << 12) - 1U;
 constexpr std::uint8_t kOperators[3] = {'+', '-', '*'};
+// Evaluation draws this many admissible cases per operator when the full
+// admissible set is larger; otherwise the set is enumerated exhaustively.
+constexpr std::size_t kEvalCases = 3000;
 
 // The single source of arithmetic truth. It labels data and scores
 // predictions; it is never visible to either model.
@@ -70,7 +77,7 @@ bool evaluate(
 }
 
 // Every admissible case for one operator, in a fixed order.
-std::vector<sera::ArithmeticTrainingCase> exhaustive_cases(
+std::vector<sera::ArithmeticTrainingCase> admissible_cases(
     std::uint8_t operation
 ) {
     std::vector<sera::ArithmeticTrainingCase> cases;
@@ -85,6 +92,27 @@ std::vector<sera::ArithmeticTrainingCase> exhaustive_cases(
     return cases;
 }
 
+// A fixed, seed-independent evaluation set, so every architecture and seed is
+// scored on exactly the same cases.
+const std::vector<sera::ArithmeticTrainingCase>& evaluation_cases(
+    std::size_t index
+) {
+    static std::vector<std::vector<sera::ArithmeticTrainingCase>> sets = [] {
+        std::vector<std::vector<sera::ArithmeticTrainingCase>> built(3);
+        std::mt19937_64 engine(0x0E7A1);
+        for (std::size_t slot = 0; slot < 3; ++slot) {
+            auto pool = admissible_cases(kOperators[slot]);
+            if (pool.size() > kEvalCases) {
+                std::shuffle(pool.begin(), pool.end(), engine);
+                pool.resize(kEvalCases);
+            }
+            built[slot] = std::move(pool);
+        }
+        return built;
+    }();
+    return sets[index];
+}
+
 // Operator-stratified sampling: each batch draws equally from the three
 // operator pools, so multiplication is never starved by the fact that fewer
 // of its operand pairs are admissible.
@@ -92,7 +120,7 @@ class BatchSampler {
 public:
     explicit BatchSampler(std::uint64_t seed) : engine_(seed) {
         for (std::size_t index = 0; index < 3; ++index) {
-            pools_[index] = exhaustive_cases(kOperators[index]);
+            pools_[index] = admissible_cases(kOperators[index]);
         }
     }
 
@@ -136,7 +164,7 @@ template <typename Kernel>
 std::vector<OperatorScore> evaluate_exhaustively(const Kernel& kernel) {
     std::vector<OperatorScore> scores(3);
     for (std::size_t index = 0; index < 3; ++index) {
-        for (const auto& example : exhaustive_cases(kOperators[index])) {
+        for (const auto& example : evaluation_cases(index)) {
             const auto inference = kernel.infer(
                 example.left, example.right, example.raw_operator
             );
@@ -206,7 +234,8 @@ void run(
     summary << "  \"parameters\": " << parameters << ",\n";
     summary << "  \"evaluation_parameter_drift\": "
             << (checksum_before == checksum_after ? 0 : 1) << ",\n";
-    summary << "  \"exhaustive\": true,\n";
+    summary << "  \"evaluation_cases_per_operator\": "
+            << scores[0].total << ",\n";
     summary << "  \"addition_accuracy\": " << scores[0].accuracy() << ",\n";
     summary << "  \"subtraction_accuracy\": " << scores[1].accuracy() << ",\n";
     summary << "  \"multiplication_accuracy\": " << scores[2].accuracy()
@@ -238,7 +267,7 @@ void run(
 int main(int argc, char** argv) {
     if (argc < 6) {
         std::cerr << "usage: " << argv[0]
-                  << " <out_dir> <s4|s5> <capacity> <seed> <steps>\n";
+                  << " <out_dir> <s4|s5> <capacity> <seed> <steps> [bit_width]\n";
         return 2;
     }
     try {
@@ -248,6 +277,10 @@ int main(int argc, char** argv) {
             static_cast<std::uint32_t>(std::stoul(argv[3]));
         const auto seed = static_cast<std::uint64_t>(std::stoull(argv[4]));
         const auto steps = static_cast<std::uint32_t>(std::stoul(argv[5]));
+        if (argc >= 7) {
+            kWidth = static_cast<std::uint32_t>(std::stoul(argv[6]));
+            kLimit = (1U << kWidth) - 1U;
+        }
         std::filesystem::create_directories(out_dir);
 
         if (arch == "s4") {
@@ -259,7 +292,7 @@ int main(int argc, char** argv) {
             config.residual_rate = 0.4F;
             sera::NeuralProofKernel kernel(config, seed);
             const auto label =
-                "s4_rank" + std::to_string(capacity) + "_seed"
+                "w" + std::to_string(kWidth) + "_s4_rank" + std::to_string(capacity) + "_seed"
                 + std::to_string(seed);
             run(
                 kernel, label, kernel.telemetry().parameters, out_dir, seed,
@@ -270,10 +303,12 @@ int main(int argc, char** argv) {
             config.bit_width = kWidth;
             config.channels = capacity;
             config.shared_rank = 5;
-            config.reasoning_steps = 14;
+            // Routing a value across a W x W lattice with a 3x3 stencil
+            // needs on the order of W steps, so the horizon scales with width.
+            config.reasoning_steps = 2U * kWidth;
             sera::InteractionWorkspaceKernel kernel(config, seed);
             const auto label =
-                "s5_channels" + std::to_string(capacity) + "_seed"
+                "w" + std::to_string(kWidth) + "_s5_channels" + std::to_string(capacity) + "_seed"
                 + std::to_string(seed);
             run(
                 kernel, label, kernel.telemetry().parameters, out_dir, seed,
