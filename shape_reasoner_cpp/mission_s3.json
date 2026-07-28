@@ -1,0 +1,29 @@
+{
+  "stage": "S3",
+  "name": "Reusable Neural Shape Field",
+  "language": "C++20",
+  "architecture": {
+    "family": "recurrent graph neural cellular field",
+    "transformer_attention": false,
+    "token_autoregression": false,
+    "input_bits": 6,
+    "output_bits": 6,
+    "state_nodes": 64,
+    "hidden_units": 24,
+    "reasoning_steps": 6,
+    "shared_parameters": 1993
+  },
+  "policy": {
+    "operation_cues": 0,
+    "derived_hamming_features": false,
+    "per_episode_evaluation_updates": false,
+    "fresh_confirmation": true
+  },
+  "acceptance": {
+    "minimum_exact_accuracy": 0.85,
+    "minimum_bit_accuracy": 0.96,
+    "maximum_negative_control_exact_accuracy": 0.10,
+    "maximum_parameter_drift": 0,
+    "maximum_support_order_drift": 0
+  }
+}

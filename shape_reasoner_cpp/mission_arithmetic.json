@@ -1,0 +1,29 @@
+{
+  "stage": "S1-Learned-Arithmetic",
+  "question": "Can SERA learn anonymous arithmetic relations from examples and use the frozen relations to solve unseen direct, inverse, and composed expression shapes?",
+  "leakage_rules": [
+    "The learner receives only operator_id, left operand, right operand, and training result.",
+    "No test pair may appear in training.",
+    "The learner source may not call the arithmetic oracle or inspect operator symbols.",
+    "Ground-truth arithmetic is confined to dataset generation and post-inference scoring.",
+    "The learned model is frozen before held-out, extrapolation, inverse, and composition evaluation.",
+    "A permuted-label negative control must be trained through the identical pipeline."
+  ],
+  "success_criteria": {
+    "train_test_overlap": 0,
+    "heldout_accuracy_minimum": 0.99,
+    "extrapolation_accuracy_minimum": 0.99,
+    "inverse_accuracy_minimum": 0.99,
+    "two_step_accuracy_minimum": 0.99,
+    "three_step_accuracy_minimum": 0.99,
+    "permuted_label_accuracy_maximum": 0.25,
+    "training_order_prediction_drift_maximum": 1e-8,
+    "asan_ubsan_required": true
+  },
+  "non_claims": [
+    "The test does not establish general mathematical reasoning.",
+    "The hypothesis class is a generic polynomial basis of total degree at most three.",
+    "The training data is noiseless and synthetically generated.",
+    "The test does not include division, decimals, long integers, or natural-language parsing."
+  ]
+}
