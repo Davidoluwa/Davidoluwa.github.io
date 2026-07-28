@@ -29,9 +29,16 @@ categorical kernel:
   across recurrent time and expression-tree nodes, emits explicit arithmetic
   proof ledgers, and intentionally fails closed when strict accuracy gates are
   not met.
+- an S5 shift-equivariant 2-D interaction workspace that replaces the
+  factorized S4 relation with an exact bilinear lattice and a single tied
+  stencil, giving a parameter count independent of bit width, with a
+  finite-difference-verified backward pass and structured rank-channel
+  pruning. See `S5_INTERACTION_WORKSPACE.md` and `S5_RESULTS.md`.
 
-It contains no language model, tokenizer, Python, external ML framework, or
-claim of learned grounding.
+The engine itself contains no language model, tokenizer, Python, external ML
+framework, or claim of learned grounding. The `research/` directory holds
+offline analysis scripts that do use Python and NumPy; nothing under `src/` or
+`include/` depends on them.
 
 ## Build
 
