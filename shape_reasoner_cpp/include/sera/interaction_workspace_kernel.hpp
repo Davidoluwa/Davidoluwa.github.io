@@ -80,6 +80,17 @@ public:
         std::span<const ArithmeticTrainingCase> cases
     ) const;
 
+    // Group norm of each shared rank channel. A channel spans the projection
+    // and both stencil lifts, so driving one to zero removes
+    // channels * (1 + 2 * taps) real parameters at once. The group penalty in
+    // train_batch is what makes these norms separate.
+    [[nodiscard]] std::vector<double> rank_channel_norms() const;
+
+    // Hard-zero the `count` lowest-norm rank channels and report how many
+    // parameters that removes. Used to measure, rather than assert,
+    // parameter efficiency: accuracy is re-evaluated after pruning.
+    std::uint64_t prune_rank_channels(std::uint32_t count);
+
     [[nodiscard]] const WorkspaceKernelConfig& config() const noexcept;
     [[nodiscard]] const WorkspaceTelemetry& telemetry() const noexcept;
     [[nodiscard]] std::uint64_t parameter_checksum() const noexcept;

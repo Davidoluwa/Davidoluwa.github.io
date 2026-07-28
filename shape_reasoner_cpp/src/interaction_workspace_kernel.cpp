@@ -879,6 +879,67 @@ ArithmeticInference InteractionWorkspaceKernel::infer(
     return inference;
 }
 
+std::vector<double> InteractionWorkspaceKernel::rank_channel_norms() const {
+    const std::size_t channels = config_.channels;
+    const std::size_t rank = config_.shared_rank;
+    std::vector<double> norms(rank, 0.0);
+    for (std::size_t r = 0; r < rank; ++r) {
+        double squared = 0.0;
+        for (std::size_t c = 0; c < channels; ++c) {
+            const double value = parameters_->projection[r * channels + c];
+            squared += value * value;
+        }
+        for (std::uint32_t tap = 0; tap < kTaps; ++tap) {
+            for (std::size_t c = 0; c < channels; ++c) {
+                const std::size_t index = (tap * channels + c) * rank + r;
+                const double candidate = parameters_->candidate[index];
+                const double update = parameters_->update[index];
+                squared += candidate * candidate + update * update;
+            }
+        }
+        norms[r] = std::sqrt(squared);
+    }
+    return norms;
+}
+
+std::uint64_t InteractionWorkspaceKernel::prune_rank_channels(
+    std::uint32_t count
+) {
+    const std::size_t channels = config_.channels;
+    const std::size_t rank = config_.shared_rank;
+    if (count > rank) {
+        throw std::invalid_argument("Cannot prune more channels than exist");
+    }
+    const auto norms = rank_channel_norms();
+    std::vector<std::size_t> order(rank);
+    for (std::size_t index = 0; index < rank; ++index) {
+        order[index] = index;
+    }
+    std::sort(
+        order.begin(),
+        order.end(),
+        [&](std::size_t a, std::size_t b) { return norms[a] < norms[b]; }
+    );
+
+    std::uint64_t removed = 0;
+    for (std::uint32_t slot = 0; slot < count; ++slot) {
+        const std::size_t r = order[slot];
+        for (std::size_t c = 0; c < channels; ++c) {
+            parameters_->projection[r * channels + c] = 0.0F;
+            ++removed;
+        }
+        for (std::uint32_t tap = 0; tap < kTaps; ++tap) {
+            for (std::size_t c = 0; c < channels; ++c) {
+                const std::size_t index = (tap * channels + c) * rank + r;
+                parameters_->candidate[index] = 0.0F;
+                parameters_->update[index] = 0.0F;
+                removed += 2;
+            }
+        }
+    }
+    return removed;
+}
+
 std::uint64_t InteractionWorkspaceKernel::parameter_checksum() const noexcept {
     std::uint64_t checksum = 0xCBF29CE484222325ULL;
     for (const auto* tensor : parameters_->tensors()) {

@@ -208,11 +208,43 @@ void check_width_independent_parameters() {
     );
 }
 
+// Pruning must remove exactly the parameters it claims, and must target the
+// weakest channels rather than arbitrary ones.
+void check_structured_pruning() {
+    auto config = small_config();
+    sera::InteractionWorkspaceKernel kernel(config, 0x0BADC0DE0BADC0DEULL);
+    for (int step = 0; step < 60; ++step) {
+        kernel.train_batch(sample_batch(), 0.02F, 1.0e-3F);
+    }
+    const auto norms = kernel.rank_channel_norms();
+    require(
+        norms.size() == config.shared_rank,
+        "Channel norm vector has the wrong length"
+    );
+
+    const auto weakest =
+        std::min_element(norms.begin(), norms.end()) - norms.begin();
+    const std::uint64_t removed = kernel.prune_rank_channels(1);
+    // Each channel spans the projection plus both stencil lifts over 10 taps.
+    const std::uint64_t expected =
+        config.channels + 2ULL * 10ULL * config.channels;
+    require(removed == expected, "Pruning removed the wrong parameter count");
+
+    const auto after = kernel.rank_channel_norms();
+    require(after[weakest] == 0.0, "Pruning did not zero the weakest channel");
+
+    require_throws(
+        [&] { kernel.prune_rank_channels(config.shared_rank + 1); },
+        "Over-pruning was not rejected"
+    );
+}
+
 }  // namespace
 
 int main() {
     try {
         check_gradient();
+        check_structured_pruning();
         check_determinism_and_learning();
         check_bit_width_guard();
         check_checkpoint_round_trip();

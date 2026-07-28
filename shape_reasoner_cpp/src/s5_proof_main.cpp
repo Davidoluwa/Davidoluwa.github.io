@@ -22,6 +22,7 @@
 #include <fstream>
 #include <iostream>
 #include <memory>
+#include <algorithm>
 #include <random>
 #include <string>
 #include <vector>
@@ -209,12 +210,29 @@ struct Metrics {
     }
 };
 
+// Sampled atomic accuracy over the admissible set, used for the pruning
+// curve. The case list is fixed so every pruning level is scored identically.
+double atomic_accuracy(
+    const sera::InteractionWorkspaceKernel& kernel,
+    const std::vector<sera::ArithmeticTrainingCase>& cases
+) {
+    std::size_t correct = 0;
+    for (const auto& example : cases) {
+        const auto inference =
+            kernel.infer(example.left, example.right, example.raw_operator);
+        correct += inference.value == example.target ? 1 : 0;
+    }
+    return cases.empty() ? 0.0
+        : static_cast<double>(correct) / static_cast<double>(cases.size());
+}
+
 }  // namespace
 
 int main(int argc, char** argv) {
     if (argc < 5) {
         std::cerr << "usage: " << argv[0]
-                  << " <out_dir> <channels> <seed> <steps> [bit_width]\n";
+                  << " <out_dir> <channels> <seed> <steps> [bit_width]"
+                     " [group_penalty]\n";
         return 2;
     }
     try {
@@ -226,6 +244,12 @@ int main(int argc, char** argv) {
             kWidth = static_cast<std::uint32_t>(std::stoul(argv[5]));
             kLimit = (1U << kWidth) - 1U;
         }
+        // Group penalty over shared rank channels. Each channel spans the
+        // projection and both stencil lifts, so the penalty pushes whole
+        // channels towards zero rather than scattering small weights, which
+        // is what makes structured pruning meaningful afterwards.
+        const float penalty =
+            argc >= 7 ? std::stof(argv[6]) : 1.0e-4F;
         std::filesystem::create_directories(output);
 
         sera::WorkspaceKernelConfig config;
@@ -271,7 +295,7 @@ int main(int argc, char** argv) {
                 6.0e-3 * (0.5 * (1.0 + std::cos(3.14159265358979 * progress)))
                     + 2.0e-4
             );
-            const double loss = kernel.train_batch(batch, rate, 0.0F);
+            const double loss = kernel.train_batch(batch, rate, penalty);
             if (step % 50 == 0 || step + 1 == steps) {
                 curve << step << "," << loss << "\n";
             }
@@ -379,6 +403,50 @@ int main(int argc, char** argv) {
                     << "\n";
         }
         summary << "}\n";
+
+        // Structured pruning curve: zero the lowest-norm rank channels one at
+        // a time and re-score. This measures how much of the parameter budget
+        // the group penalty actually made redundant.
+        std::vector<sera::ArithmeticTrainingCase> atomic_eval;
+        {
+            std::mt19937_64 pick_random(0xA70A11CULL);
+            for (std::size_t slot = 0; slot < 3; ++slot) {
+                auto pool = pools[slot];
+                std::shuffle(pool.begin(), pool.end(), pick_random);
+                if (pool.size() > 400) {
+                    pool.resize(400);
+                }
+                atomic_eval.insert(
+                    atomic_eval.end(), pool.begin(), pool.end()
+                );
+            }
+        }
+
+        std::ofstream pruning(output / "pruning_curve.csv");
+        pruning << "pruned_channels,live_parameters,atomic_accuracy\n";
+        const auto norms = kernel.rank_channel_norms();
+        std::ofstream norms_out(output / "rank_channel_norms.csv");
+        norms_out << "channel,group_norm\n";
+        for (std::size_t index = 0; index < norms.size(); ++index) {
+            norms_out << index << ',' << norms[index] << '\n';
+        }
+
+        const std::uint64_t total_parameters = kernel.telemetry().parameters;
+        const auto checkpoint = (output / "sera_s5_kernel.bin").string();
+        for (std::uint32_t pruned = 0; pruned < config.shared_rank; ++pruned) {
+            // Always prune from the trained checkpoint, never cumulatively
+            // from an already-damaged model.
+            kernel.load_checkpoint(checkpoint);
+            const std::uint64_t removed =
+                pruned == 0 ? 0 : kernel.prune_rank_channels(pruned);
+            const double accuracy = atomic_accuracy(kernel, atomic_eval);
+            pruning << pruned << ',' << (total_parameters - removed) << ','
+                    << accuracy << '\n';
+            std::cout << "pruned " << pruned << " channels | live params "
+                      << (total_parameters - removed) << " | atomic "
+                      << accuracy << std::endl;
+        }
+        kernel.load_checkpoint(checkpoint);
     } catch (const std::exception& error) {
         std::cerr << "s5 proof run failed: " << error.what() << "\n";
         return 1;
