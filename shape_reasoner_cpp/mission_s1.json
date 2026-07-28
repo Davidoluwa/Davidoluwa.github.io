@@ -1,0 +1,50 @@
+{
+  "stage": "S1-hardened",
+  "mission": "Test whether a C++ engine can settle a categorical relational shape before compiling an answer, without token-by-token reasoning inside the solver.",
+  "frozen_before_final_run": true,
+  "success_criteria": {
+    "anchored_modular_shapes": {
+      "minimum_cases": 36,
+      "minimum_success_rate": 0.98,
+      "requires_zero_factor_violations": true
+    },
+    "factor_order_invariance": {
+      "maximum_assignment_failures": 0,
+      "maximum_energy_drift": 1e-9
+    },
+    "goal_shape_extraction": {
+      "maximum_query_failures": 0,
+      "minimum_reduction_with_four_distractor_components": 0.79
+    },
+    "contradiction_detection": {
+      "minimum_cases": 36,
+      "minimum_energy_ratio": 10.0
+    },
+    "correlated_ambiguity": {
+      "minimum_cases": 6,
+      "minimum_mode_coverage": 1.0,
+      "requires_zero_energy_modes": true
+    },
+    "exact_oracle": {
+      "tree_cases": 24,
+      "tree_exact_rate": 1.0,
+      "loopy_cases": 24,
+      "adaptive_particle_exact_rate": 1.0
+    },
+    "compute_gating": {
+      "minimum_weighted_candidate_reduction": 0.5,
+      "requires_exact_operation_reconciliation": true
+    },
+    "hardening": {
+      "validation_tests": 5,
+      "s0_regression_required": true,
+      "asan_ubsan_required": true
+    }
+  },
+  "non_claims": [
+    "This stage does not learn topology or factors from raw sensory data.",
+    "This stage does not establish human-like cognition.",
+    "Loopy min-sum settlement is approximate unless adaptive branching or a certified optimizer closes the gap.",
+    "No benchmark here compares end-to-end capability against a language model."
+  ]
+}
