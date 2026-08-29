@@ -1,0 +1,34 @@
+name: FIFA16 temporary runtime transfer
+
+on:
+  push:
+    branches: [fifa16-runtime-transfer]
+
+permissions:
+  contents: write
+
+jobs:
+  transfer:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: fifa16-runtime-transfer
+      - name: Fetch official Unicorn runtime and commit to transfer branch
+        shell: bash
+        run: |
+          set -euxo pipefail
+          curl -fL --retry 5 -o unicorn.7z https://github.com/unicorn-engine/unicorn/releases/download/2.1.4/ubuntu-cmake-shared-x64.7z
+          echo '07841e2df55a6d4ac063017bdfd861f1712083c6f2ffe5fe96973c834cd772dc  unicorn.7z' | sha256sum -c -
+          sudo apt-get update >/dev/null
+          sudo apt-get install -y p7zip-full >/dev/null
+          mkdir unpack tmp_runtime
+          7z x unicorn.7z -ounpack >/dev/null
+          cp unpack/lib/libunicorn.so.2 tmp_runtime/libunicorn.so.2
+          sha256sum tmp_runtime/libunicorn.so.2 | tee tmp_runtime/SHA256SUMS.txt
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add tmp_runtime/libunicorn.so.2 tmp_runtime/SHA256SUMS.txt
+          git commit -m 'Temporary open-source runtime transfer [skip ci]'
+          git push origin HEAD:fifa16-runtime-transfer
