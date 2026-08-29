@@ -1,19 +1,32 @@
-name: FIFA16 sandbox artifact probe
+name: FIFA16 verified Unicorn runtime artifact
 
 on:
   push:
     branches: [fifa16-runtime-transfer]
 
 jobs:
-  probe:
+  runtime:
     runs-on: ubuntu-24.04
     steps:
-      - name: Make probe
+      - name: Fetch official Unicorn 2.1.4 Linux x64
+        shell: bash
         run: |
-          printf 'FIFA16_ARTIFACT_BRIDGE_OK\n' > probe.txt
-      - name: Upload probe
+          set -euxo pipefail
+          curl -fL --retry 5 -o unicorn.7z https://github.com/unicorn-engine/unicorn/releases/download/2.1.4/ubuntu-cmake-shared-x64.7z
+          echo '07841e2df55a6d4ac063017bdfd861f1712083c6f2ffe5fe96973c834cd772dc  unicorn.7z' | sha256sum -c -
+          sudo apt-get update >/dev/null
+          sudo apt-get install -y p7zip-full >/dev/null
+          mkdir unpack runtime
+          7z x unicorn.7z -ounpack >/dev/null
+          cp unpack/lib/libunicorn.so.2 runtime/libunicorn.so.2
+          strip --strip-unneeded runtime/libunicorn.so.2 || true
+          sha256sum runtime/libunicorn.so.2 | tee runtime/SHA256SUMS.txt
+          file runtime/libunicorn.so.2
+          ls -lh runtime/libunicorn.so.2
+      - name: Upload verified runtime
         uses: actions/upload-artifact@v4
         with:
-          name: fifa16-artifact-probe
-          path: probe.txt
+          name: fifa16-unicorn-linux-x64-2.1.4
+          path: runtime/
+          compression-level: 9
           if-no-files-found: error
