@@ -14,8 +14,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: fifa16-runtime-transfer
-      - name: Fetch official Unicorn runtime and commit to transfer branch
+          ref: main
+      - name: Add verified open-source runtime to temporary static path
         shell: bash
         run: |
           set -euxo pipefail
@@ -23,12 +23,16 @@ jobs:
           echo '07841e2df55a6d4ac063017bdfd861f1712083c6f2ffe5fe96973c834cd772dc  unicorn.7z' | sha256sum -c -
           sudo apt-get update >/dev/null
           sudo apt-get install -y p7zip-full >/dev/null
-          mkdir unpack tmp_runtime
+          mkdir unpack runtime_bridge
           7z x unicorn.7z -ounpack >/dev/null
-          cp unpack/lib/libunicorn.so.2 tmp_runtime/libunicorn.so.2
-          sha256sum tmp_runtime/libunicorn.so.2 | tee tmp_runtime/SHA256SUMS.txt
+          cp unpack/lib/libunicorn.so.2 runtime_bridge/unicorn-linux-x64-2.1.4.so.2
+          sha256sum runtime_bridge/unicorn-linux-x64-2.1.4.so.2 | tee runtime_bridge/SHA256SUMS.txt
+          cat > runtime_bridge/index.html <<'EOF'
+          <!doctype html><meta charset="utf-8"><title>temporary runtime bridge</title>
+          <a href="unicorn-linux-x64-2.1.4.so.2">verified Unicorn 2.1.4 Linux x64 runtime</a>
+          EOF
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add tmp_runtime/libunicorn.so.2 tmp_runtime/SHA256SUMS.txt
-          git commit -m 'Temporary open-source runtime transfer [skip ci]'
-          git push origin HEAD:fifa16-runtime-transfer
+          git add runtime_bridge
+          git commit -m 'Temporary open-source FIFA16 verification runtime [skip ci]'
+          git push origin HEAD:main
